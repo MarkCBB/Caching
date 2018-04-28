@@ -21,7 +21,7 @@
     <SystemDataSqlClientPackageVersion>4.5.0</SystemDataSqlClientPackageVersion>
     <XunitPackageVersion>2.3.1</XunitPackageVersion>
     <XunitRunnerVisualStudioPackageVersion>2.4.0-beta.1.build3945</XunitRunnerVisualStudioPackageVersion>
-    <MongoDBDriverPackageVersion>2.6.0</MongoDBDriverPackageVersion>
+    <MongoDBDriverPackageVersion>2.5.1</MongoDBDriverPackageVersion>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>
