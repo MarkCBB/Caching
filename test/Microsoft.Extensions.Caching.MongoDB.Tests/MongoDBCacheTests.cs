@@ -35,7 +35,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         [Fact]
         public void MongoDBCache_InsertingOneCacheItem()
         {
-            var collection = _mongoCache.GetTestCollection();
+            var collection = _mongoCache.GetCollection();
             var keyNameValue = "InitTest";
 
             // Act
@@ -44,9 +44,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 Key = keyNameValue,
                 Value = "Test Value"
             });
-            var result = collection.Count<CaheItemModel>(f => f.Key == keyNameValue);
+            var result = collection.Count(f => f.Key == keyNameValue);
 
-            // Assert            
+            // Assert
             Assert.Equal(1, result);
         }
     }

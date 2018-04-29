@@ -29,7 +29,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return new MongoClient(_options.ConnectionString);
         }
 
-        public IMongoCollection<CaheItemModel> GetTestCollection()
+        public IMongoCollection<CaheItemModel> GetCollection()
         {
             return GetClient()
                 .GetDatabase(_options.DatabaseName)
