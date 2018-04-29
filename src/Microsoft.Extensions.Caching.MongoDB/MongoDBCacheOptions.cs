@@ -10,15 +10,15 @@ namespace Microsoft.Extensions.Caching.MongoDB
     /// </summary>
     public class MongoDBCacheOptions : IOptions<MongoDBCacheOptions>
     {
-        /// <summary>
-        /// The configuration used to connect to MongoDB.
-        /// </summary>
-        public string Configuration { get; set; }
+        public string ConnectionString { get; set; }
 
-        /// <summary>
-        /// The MongoDB instance name.
-        /// </summary>
-        public string InstanceName { get; set; }
+        public string DatabaseName { get; set; }
+
+        public string CollectionName { get; set; }
+
+        public bool CreateKeyIndex { get; set; }
+
+        public bool CreateTTLIndex { get; set; }
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {
