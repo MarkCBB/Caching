@@ -27,27 +27,70 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
             _mongoCache = new MongoDBCache(options);
 
-            //Cleans the test database
-            var db = _mongoCache.GetClient();
-            db.DropDatabase(options.DatabaseName);
+            //Uncomment to clean the test database before to run the test cases.
+            //var db = _mongoCache.GetClient();
+            //db.DropDatabase(options.DatabaseName);
         }
 
         [Fact]
         public void MongoDBCache_InsertingOneCacheItem()
         {
+            // Arrange
             var collection = _mongoCache.GetCollection();
-            var keyNameValue = "InitTest";
+            var keyNameValue = "InitTest" + Guid.NewGuid().ToString();
 
             // Act
-            collection.InsertOne(new CaheItemModel()
+            collection.InsertOne(new CacheItemModel()
             {
                 Key = keyNameValue,
-                Value = "Test Value"
+                Value = "Test MongoDBCache_InsertingOneCacheItem",
+                ExpirationTimeUtcInTicks = System.DateTime.UtcNow.AddHours(1).Ticks
             });
             var result = collection.Count(f => f.Key == keyNameValue);
 
             // Assert
             Assert.Equal(1, result);
+        }
+
+        [Fact]
+        public void MongoDBCache_GetsAndUpdatesTheSlidingExpirationInOneRequest()
+        {
+            // Arrange
+            var collection = _mongoCache.GetCollection();
+            var keyNameValue = "SlidingExpirationTest" + Guid.NewGuid().ToString();
+            var referenceTimeStamp = System.DateTime.UtcNow;            
+
+            //Act
+            //SlidingExpiration +5 minutes and AbsoluteExpiration 1 hour
+            collection.InsertOne(new CacheItemModel()
+            {
+                Key = keyNameValue,
+                Value = "Test MongoDBCache_GetsAndUpdatesTheSlidingExpiration",
+                SlidingTimeUtcTicks = referenceTimeStamp.AddMinutes(5).Ticks,
+                ExpirationTimeUtcInTicks = referenceTimeStamp.AddHours(1).Ticks
+            });
+
+            var updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
+            var filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
+
+            // By accessing the element the SlidingExpiration will be increased
+            // in 5 additional minutes (total 10 compared with the original value) in one request
+            var update = updateBuilder.Inc(
+                x=> x.SlidingTimeUtcTicks,
+                TimeSpan.FromMinutes(5).Ticks);
+            var filter = filterBuilder.Eq(x => x.Key, keyNameValue);
+            var updatedDocument = collection.FindOneAndUpdate(
+                filter,
+                update,
+                new FindOneAndUpdateOptions<CacheItemModel>()
+                {
+                    //We get the document after the update
+                    ReturnDocument = ReturnDocument.After
+                });
+
+            //Assert
+            Assert.Equal(referenceTimeStamp.AddMinutes(10), DateTime.FromBinary(updatedDocument.SlidingTimeUtcTicks));
+            Assert.Equal(referenceTimeStamp.AddHours(1), DateTime.FromBinary(updatedDocument.ExpirationTimeUtcInTicks));
         }
     }
 }

@@ -29,11 +29,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return new MongoClient(_options.ConnectionString);
         }
 
-        public IMongoCollection<CaheItemModel> GetCollection()
+        public IMongoCollection<CacheItemModel> GetCollection()
         {
             return GetClient()
                 .GetDatabase(_options.DatabaseName)
-                .GetCollection<CaheItemModel>(_options.CollectionName);
+                .GetCollection<CacheItemModel>(_options.CollectionName);
         }
 
         public byte[] Get(string key)

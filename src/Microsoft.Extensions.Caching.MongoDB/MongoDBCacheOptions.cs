@@ -15,10 +15,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public string DatabaseName { get; set; }
 
         public string CollectionName { get; set; }
+        
+        public bool CreateKeyAndValueIndex { get; set; }
 
-        public bool CreateKeyIndex { get; set; }
+        public bool CreateSlidingTimeUtcIndex { get; set; }
 
-        public bool CreateTTLIndex { get; set; }
+        public bool CreateExpirationTimeUtcIndex { get; set; }
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {
