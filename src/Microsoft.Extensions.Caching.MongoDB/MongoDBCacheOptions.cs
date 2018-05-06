@@ -15,7 +15,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public string DatabaseName { get; set; }
 
         public string CollectionName { get; set; }
-        
+
+        public int MaxRetries { get; set; }
+
+        public int TimeToWait { get; set; }
+
         public bool CreateKeyAndValueIndex { get; set; }
 
         public bool CreateSlidingTimeUtcIndex { get; set; }

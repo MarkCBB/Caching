@@ -7,22 +7,22 @@ using System.Text;
 namespace Microsoft.Extensions.Caching.MongoDB
 {
     /*
-     For performance reasons the "time to live" (TTL) index can't be used because
-     of the following reasons:
-
-     * The TTL index only works with a type of Date BSON.
+     Consider:
+     * MongoDB does not allow server side update operations based
+       in the results of some calculation or condition of some field(s)
+       in the same document to be updated.
      * The $inc field update operator only works with numerical types.
-     * Therefore, a Date value can't be updated at the same time that the value
-       is fetched executing the command FindOneAndUpdate and using the $inc operator.
-
-     The approach will be to store the expiration time as a long number that will 
-     represent the Ticks of the DateTime format. Every time that an item will be
-     accessed, the specified SlidingExpiration will be incremented with the
-     specified time interval in Ticks.
-
-     This can be done in one request to the database using the command
-     FindOneAndUpdate and updateing the document at the same time
-     that is retreived.
+     
+     Therefore:
+     * A Date value can't be updated at the same time that the value
+       is fetched executing the command FindOneAndUpdate and
+       using the $inc operator.
+     * A field with the effective expiration timestamp will be set.
+     * Is much more efficient to work only with an absolutely expiration time
+       avoiding sliding Time, because no updates will be performed
+       wverytime that a value is fetched.
+     * We can use the TTL index to remove all elements in server side.    
+        
     */
 
 
@@ -42,10 +42,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// <summary>
         /// The value of the cache item.
         /// </summary>
-        public string Value { get; set; }
+        public byte[] Value { get; set; }
 
-        public long SlidingTimeUtcTicks { get; set; }
+        public long SlidingTimeTicks { get; set; }        
 
-        public long ExpirationTimeUtcInTicks { get; set; }
+        public DateTime AbsoluteExpirationTimeUtc { get; set; }
+
+        public DateTime EffectiveExpirationTimeUtc { get; set; }
     }
 }

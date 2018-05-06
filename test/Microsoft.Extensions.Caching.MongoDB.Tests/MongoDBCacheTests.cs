@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 using MongoDB.Driver;
+using System.Text;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
@@ -36,15 +37,17 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public void MongoDBCache_InsertingOneCacheItem()
         {
             // Arrange
-            var collection = _mongoCache.GetCollection();
-            var keyNameValue = "InitTest" + Guid.NewGuid().ToString();
+            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var keyNameValue = "InsertingOneCacheItem" + Guid.NewGuid().ToString();
+            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
 
             // Act
             collection.InsertOne(new CacheItemModel()
             {
                 Key = keyNameValue,
-                Value = "Test MongoDBCache_InsertingOneCacheItem",
-                ExpirationTimeUtcInTicks = System.DateTime.UtcNow.AddHours(1).Ticks
+                Value = Encoding.ASCII.GetBytes("Test MongoDBCache_InsertingOneCacheItem"),
+                AbsoluteExpirationTimeUtc = absolutExpirationTime,
+                EffectiveExpirationTimeUtc = absolutExpirationTime
             });
             var result = collection.Count(f => f.Key == keyNameValue);
 
@@ -53,44 +56,49 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact]
-        public void MongoDBCache_GetsAndUpdatesTheSlidingExpirationInOneRequest()
+        public void MongoDBCache_DefaultSlidingTimeTicksIsZero()
         {
             // Arrange
-            var collection = _mongoCache.GetCollection();
-            var keyNameValue = "SlidingExpirationTest" + Guid.NewGuid().ToString();
-            var referenceTimeStamp = System.DateTime.UtcNow;            
+            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var keyNameValue = "DefaultSlidingTimeTicksIsZero" + Guid.NewGuid().ToString();
+            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
 
-            //Act
-            //SlidingExpiration +5 minutes and AbsoluteExpiration 1 hour
+            // Act
             collection.InsertOne(new CacheItemModel()
             {
                 Key = keyNameValue,
-                Value = "Test MongoDBCache_GetsAndUpdatesTheSlidingExpiration",
-                SlidingTimeUtcTicks = referenceTimeStamp.AddMinutes(5).Ticks,
-                ExpirationTimeUtcInTicks = referenceTimeStamp.AddHours(1).Ticks
+                Value = Encoding.ASCII.GetBytes("Test MongoDBCache_InsertingOneCacheItem"),
+                AbsoluteExpirationTimeUtc = absolutExpirationTime,
+                EffectiveExpirationTimeUtc = absolutExpirationTime
             });
+            //Encoding.ASCII.GetString(
+            var result = collection.Find(f => f.Key == keyNameValue).FirstOrDefault();
 
-            var updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
-            var filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
-
-            // By accessing the element the SlidingExpiration will be increased
-            // in 5 additional minutes (total 10 compared with the original value) in one request
-            var update = updateBuilder.Inc(
-                x=> x.SlidingTimeUtcTicks,
-                TimeSpan.FromMinutes(5).Ticks);
-            var filter = filterBuilder.Eq(x => x.Key, keyNameValue);
-            var updatedDocument = collection.FindOneAndUpdate(
-                filter,
-                update,
-                new FindOneAndUpdateOptions<CacheItemModel>()
-                {
-                    //We get the document after the update
-                    ReturnDocument = ReturnDocument.After
-                });
-
-            //Assert
-            Assert.Equal(referenceTimeStamp.AddMinutes(10), DateTime.FromBinary(updatedDocument.SlidingTimeUtcTicks));
-            Assert.Equal(referenceTimeStamp.AddHours(1), DateTime.FromBinary(updatedDocument.ExpirationTimeUtcInTicks));
+            // Assert
+            Assert.Equal(0, result.SlidingTimeTicks);
         }
+
+
+        [Fact]
+        public void MongoDBCache_NoValueInAbsoluteExpirationIsDateTimeMinValue()
+        {
+            // Arrange
+            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var keyNameValue = "NoValueInAbsoluteExpiration" + Guid.NewGuid().ToString();
+            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
+
+            // Act
+            collection.InsertOne(new CacheItemModel()
+            {
+                Key = keyNameValue,
+                Value = Encoding.ASCII.GetBytes("Test MongoDBCache_InsertingOneCacheItem"),                
+                EffectiveExpirationTimeUtc = absolutExpirationTime
+            });
+            //Encoding.ASCII.GetString(
+            var result = collection.Find(f => f.Key == keyNameValue).FirstOrDefault();
+
+            // Assert
+            Assert.Equal(DateTime.MinValue, result.AbsoluteExpirationTimeUtc);
+        }        
     }
 }

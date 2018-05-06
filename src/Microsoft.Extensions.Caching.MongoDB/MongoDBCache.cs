@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class MongoDBCache : IDisposable
     {
-        private MongoDBCacheOptions _options;
+        public MongoDBCacheOptions Options;
 
         public MongoDBCache(IOptions<MongoDBCacheOptions> optionsAccessor)
         {
@@ -21,19 +21,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 throw new ArgumentNullException(nameof(optionsAccessor));
             }
 
-            _options = optionsAccessor.Value;
-        }
-
-        public MongoClient GetClient()
-        {
-            return new MongoClient(_options.ConnectionString);
-        }
-
-        public IMongoCollection<CacheItemModel> GetCollection()
-        {
-            return GetClient()
-                .GetDatabase(_options.DatabaseName)
-                .GetCollection<CacheItemModel>(_options.CollectionName);
+            Options = optionsAccessor.Value;
         }
 
         public byte[] Get(string key)
@@ -42,7 +30,33 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            return null;
+
+            CacheItemModel item = null;
+            if (!this.TryGetItem(key, ref item))
+            {
+                return null;
+            }
+
+            // If there is some Sliding time specified the real Expiration time will be updated 
+            if (item.SlidingTimeTicks > 0)
+            {
+                var effectiveExpirationWithSlidingAdded =
+                     item.EffectiveExpirationTimeUtc.AddMilliseconds(item.SlidingTimeTicks);
+
+                if (effectiveExpirationWithSlidingAdded < item.AbsoluteExpirationTimeUtc)
+                {
+                    this.TryUpdateEffectiveExpirationTimeUtc(key, effectiveExpirationWithSlidingAdded);
+                }
+                else
+                {
+                    if (effectiveExpirationWithSlidingAdded > item.AbsoluteExpirationTimeUtc)
+                    {
+                        this.TryUpdateEffectiveExpirationTimeUtc(key, item.AbsoluteExpirationTimeUtc);
+                    }
+                }
+            }
+
+            return item.Value;
         }
 
         public void Dispose()
