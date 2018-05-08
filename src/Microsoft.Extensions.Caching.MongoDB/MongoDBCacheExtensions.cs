@@ -9,20 +9,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
     public static class MongoDBCacheExtensions
     {
         static private readonly FilterDefinitionBuilder<CacheItemModel> __filterBuilder;
-        static private readonly UpdateDefinitionBuilder<CacheItemModel> __updateBuilder;
-        //static private ProjectionDefinition<CacheItemModel> __defaultProjection;
+        static private readonly UpdateDefinitionBuilder<CacheItemModel> __updateBuilder;        
         
 
         static MongoDBCacheExtensions()
         {
             __filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
             __updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
-            //var projectDefinitionBuilder = new ProjectionDefinitionBuilder<CacheItemModel>();
-            //__defaultProjection = projectDefinitionBuilder
-            //    .Include(x => x.Key)
-            //    .Include(x => x.Value)
-            //    .Include(x => x.SlidingTimeUtcTicks);
-
         }
 
         public static IMongoCollection<CacheItemModel> GetCollection(this MongoDBCache obj)
@@ -80,7 +73,51 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return null;
         }
 
-        public static bool TryUpdateEffectiveExpirationTimeUtc(this MongoDBCache obj, string key, DateTime newRealExpirationTimeUtc)
+        public static bool TryInsertItem(this MongoDBCache obj, CacheItemModel item)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    var collection = GetCollection(obj);
+                    collection.InsertOne(item);
+                    return true;
+                }
+                catch
+                {
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.TimeToWait);
+                    retries++;
+                }
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> TrySetItemAsync(this MongoDBCache obj, CacheItemModel item)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    var collection = GetCollection(obj);
+                    await collection.InsertOneAsync(item);
+                    return true;
+                }
+                catch
+                {
+                    await Task.Delay(obj.Options.TimeToWait);
+                    retries++;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool TryUpdateEffectiveExpirationTimeUtc(this MongoDBCache obj, string key, DateTimeOffset newRealExpirationTimeUtc)
         {
             var retries = 0;
 
@@ -106,7 +143,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
-        public static async Task<bool> TryUpdateEffectiveExpirationTimeUtcAsync(this MongoDBCache obj, string key, DateTime newRealExpirationTimeUtc)
+        public static async Task<bool> TryUpdateEffectiveExpirationTimeUtcAsync(this MongoDBCache obj, string key, DateTimeOffset newRealExpirationTimeUtc)
         {
             var retries = 0;
 
@@ -131,5 +168,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             return false;
         }
+
     }
 }

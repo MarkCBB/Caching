@@ -46,8 +46,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public long SlidingTimeTicks { get; set; }        
 
-        public DateTime AbsoluteExpirationTimeUtc { get; set; }
+        public DateTimeOffset AbsoluteExpirationTimeUtc { get; set; }
 
-        public DateTime EffectiveExpirationTimeUtc { get; set; }
+        public DateTimeOffset EffectiveExpirationTimeUtc { get; set; }
     }
 }

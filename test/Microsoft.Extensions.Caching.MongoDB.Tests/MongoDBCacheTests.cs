@@ -14,32 +14,15 @@ using System.Text;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
-    public class MongoDBCacheTests
+    public class MongoDBCacheTests : BaseMongoDbTests
     {
-        private MongoDBCache _mongoCache = null;
-
-        public MongoDBCacheTests()
-        {
-            var options = new MongoDBCacheOptions()
-            {
-                ConnectionString = "mongodb://mongo1:27018,mongo1:27019,mongo1:27020",
-                DatabaseName = "CachingTestsDB",
-                CollectionName = "CachingEntriesTestCollection"
-            };
-            _mongoCache = new MongoDBCache(options);
-
-            //Uncomment to clean the test database before to run the test cases.
-            //var db = _mongoCache.GetClient();
-            //db.DropDatabase(options.DatabaseName);
-        }
-
         [Fact]
         public void MongoDBCache_InsertingOneCacheItem()
         {
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
             var keyNameValue = "InsertingOneCacheItem" + Guid.NewGuid().ToString();
-            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
+            var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
 
             // Act
             collection.InsertOne(new CacheItemModel()
@@ -61,7 +44,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
             var keyNameValue = "DefaultSlidingTimeTicksIsZero" + Guid.NewGuid().ToString();
-            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
+            var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
 
             // Act
             collection.InsertOne(new CacheItemModel()
@@ -85,7 +68,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
             var keyNameValue = "NoValueInAbsoluteExpiration" + Guid.NewGuid().ToString();
-            var absolutExpirationTime = System.DateTime.UtcNow.AddHours(1);
+            var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
 
             // Act
             collection.InsertOne(new CacheItemModel()
@@ -98,7 +81,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var result = collection.Find(f => f.Key == keyNameValue).FirstOrDefault();
 
             // Assert
-            Assert.Equal(DateTime.MinValue, result.AbsoluteExpirationTimeUtc);
-        }        
+            Assert.Equal(DateTimeOffset.MinValue, result.AbsoluteExpirationTimeUtc);
+        }
     }
 }
