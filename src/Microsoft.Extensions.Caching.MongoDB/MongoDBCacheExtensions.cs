@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch 
                 {
-                    System.Threading.Thread.CurrentThread.Join(obj.Options.TimeToWait);
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
                     retries++;
                 }
             }
@@ -65,7 +65,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch
                 {
-                    await Task.Delay(obj.Options.TimeToWait);
+                    await Task.Delay(obj.Options.MillisToWait);
                     retries++;
                 }
             }
@@ -87,7 +87,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch
                 {
-                    System.Threading.Thread.CurrentThread.Join(obj.Options.TimeToWait);
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
                     retries++;
                 }
             }
@@ -109,7 +109,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch
                 {
-                    await Task.Delay(obj.Options.TimeToWait);
+                    await Task.Delay(obj.Options.MillisToWait);
                     retries++;
                 }
             }
@@ -135,7 +135,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch
                 {
-                    System.Threading.Thread.CurrentThread.Join(obj.Options.TimeToWait);
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
                     retries++;
                 }
             }
@@ -161,7 +161,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 }
                 catch
                 {
-                    await Task.Delay(obj.Options.TimeToWait);
+                    await Task.Delay(obj.Options.MillisToWait);
                     retries++;
                 }
             }

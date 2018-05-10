@@ -22,6 +22,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
             }
 
             Options = optionsAccessor.Value;
+
+            if (string.IsNullOrEmpty(Options.ConnectionString))
+            {
+                throw new ArgumentException(nameof(Options.ConnectionString)
+                    + " must contain a valid value");
+            }
         }
 
         public byte[] Get(string key)
