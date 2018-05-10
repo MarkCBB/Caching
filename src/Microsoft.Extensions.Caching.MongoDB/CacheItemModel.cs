@@ -42,12 +42,42 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// <summary>
         /// The value of the cache item.
         /// </summary>
+        [BsonElement]
         public byte[] Value { get; set; }
 
-        public long SlidingTimeTicks { get; set; }        
+        [BsonElement]
+        public long SlidingTimeTicks { get; set; }
 
-        public DateTimeOffset AbsoluteExpirationTimeUtc { get; set; }
+        [BsonElement("AbsoluteExpirationTimeUtc")]
+        private DateTime _absoluteExpirationTimeUtc
+        {
+            get
+            {
+                return AbsoluteExpirationTimeUtc.Date;
+            }
+            set
+            {
+                AbsoluteExpirationTimeUtc = value;
+            }
+        }
 
-        public DateTimeOffset EffectiveExpirationTimeUtc { get; set; }
+        [BsonElement("EffectiveExpirationTimeUtc")]
+        private DateTime _effectiveExpirationTimeUtc
+        {
+            get
+            {
+                return EffectiveExpirationTimeUtc.Date;
+            }
+            set
+            {
+                EffectiveExpirationTimeUtc = value;
+            }
+        }
+
+        [BsonIgnore]
+        public DateTimeOffset AbsoluteExpirationTimeUtc;
+
+        [BsonIgnore]
+        public DateTimeOffset EffectiveExpirationTimeUtc;
     }
 }
