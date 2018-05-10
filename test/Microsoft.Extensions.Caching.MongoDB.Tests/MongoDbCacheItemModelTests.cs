@@ -14,7 +14,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
     public class MongoDbCacheItemModelTests : BaseMongoDbTests
     {
         [Fact]
-        public void MongoDBCache_ArgumentsWithNoValidValuesShouldReturnAnException()
+        public void MongoDBCache_Arguments_With_No_Valid_Values_Should_Return_An_Exception()
         {
             // Arrange
             var options = new DistributedCacheEntryOptions()
@@ -29,6 +29,58 @@ namespace Microsoft.Extensions.Caching.MongoDB
             try
             {
                 _mongoCache.Set("someKey", new byte[0], options);
+            }
+            catch
+            {
+                exceptionThrown = true;
+            }
+
+            // Assert
+            Assert.True(exceptionThrown);
+        }
+
+        [Fact]
+        public void MongoDBCache_Blank_Value_InKey_Should_Throw_An_Exception()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpiration = utcNow.AddMinutes(1),
+                SlidingExpiration = TimeSpan.FromMinutes(2)
+            };
+            var exceptionThrown = false;
+
+            // Act
+            try
+            {
+                _mongoCache.Set("", new byte[0], options);
+            }
+            catch
+            {
+                exceptionThrown = true;
+            }
+
+            // Assert
+            Assert.True(exceptionThrown);
+        }
+
+        [Fact]
+        public void MongoDBCache_Null_Value_In_Key_Should_Throw_An_Exception()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpiration = utcNow.AddMinutes(1),
+                SlidingExpiration = TimeSpan.FromMinutes(2)
+            };
+            var exceptionThrown = false;
+
+            // Act
+            try
+            {
+                _mongoCache.Set(null, new byte[0], options);
             }
             catch
             {
