@@ -10,12 +10,26 @@ namespace Microsoft.Extensions.Caching.MongoDB
     {
         static private readonly FilterDefinitionBuilder<CacheItemModel> __filterBuilder;
         static private readonly UpdateDefinitionBuilder<CacheItemModel> __updateBuilder;        
-        
+        static private readonly ProjectionDefinition<CacheItemModel> __shortProjectionDefinition;
+        static private readonly FindOptions<CacheItemModel> __findOptions;
+        static private bool __commandForCreatingIndexAlreadySent;
 
         static MongoDBCacheExtensions()
         {
             __filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
             __updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
+            var projectionBuilder = new ProjectionDefinitionBuilder<CacheItemModel>();
+            __shortProjectionDefinition = projectionBuilder
+                .Include(x => x.Key)
+                .Include(x => x.Value)
+                .Include(x => x.SlidingTimeTicks)
+                .Include(x => x._absoluteExpirationTimeUtc);
+            __findOptions = new FindOptions<CacheItemModel>()
+            {
+                Projection = __shortProjectionDefinition,
+                Limit = 1
+            };
+            __commandForCreatingIndexAlreadySent = false;
         }
 
         public static IMongoCollection<CacheItemModel> GetCollection(this MongoDBCache obj)
@@ -23,6 +37,51 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return new MongoClient(obj.Options.ConnectionString)
                 .GetDatabase(obj.Options.DatabaseName)
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
+        }
+
+        public static void CreateCoverIndex(this MongoDBCache obj, bool background = true)
+        {
+            if (!__commandForCreatingIndexAlreadySent)
+            {
+                if (!obj.Options.CreateCoverIndex && !obj.Options.CreateTTLIndex)
+                {
+                    __commandForCreatingIndexAlreadySent = true;
+                }
+                else
+                {
+                    var models = new List<CreateIndexModel<CacheItemModel>>();
+                    var indexBuilder = new IndexKeysDefinitionBuilder<CacheItemModel>();
+                    if (obj.Options.CreateCoverIndex)
+                    {
+                        var indexCoverQueryColumns = indexBuilder
+                            .Ascending(x => x.Key)
+                            .Ascending(x => x.Value)
+                            .Ascending(x => x.SlidingTimeTicks)
+                            .Ascending(x => x._absoluteExpirationTimeUtc);
+                        var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
+                        {
+                            Background = background,
+                            Name = "fullItemIndex"
+                        };
+                        models.Add(new CreateIndexModel<CacheItemModel>(indexCoverQueryColumns, indexCoverQueryOptions));
+                    }
+
+                    if (obj.Options.CreateTTLIndex)
+                    {
+                        var TTLIndexColumns = indexBuilder
+                            .Ascending(x => x._effectiveExpirationTimeUtc);
+                        var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
+                        {
+                            Background = background,
+                            ExpireAfter = TimeSpan.Zero,
+                            Name = "TTLItemIndex"
+                        };
+                        models.Add(new CreateIndexModel<CacheItemModel>(TTLIndexColumns, TTLIndexOptions));
+                    }
+                    GetCollection(obj).Indexes.CreateMany(models);
+                    __commandForCreatingIndexAlreadySent = true;
+                }
+            }
         }
 
         public static bool TryGetItem(this MongoDBCache obj, string key, ref CacheItemModel item)
@@ -33,14 +92,15 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 try
                 {
-                    var collection = GetCollection(obj);
-                    item = collection.Find(
+                    item = GetCollection(obj)
+                        .Find(
                         __filterBuilder.Eq(x => x.Key, key))
-                        .Limit(1)
-                        .FirstOrDefault();
+                            .Project<CacheItemModel>(__shortProjectionDefinition)
+                            .Limit(1)
+                            .FirstOrDefault();
                     return true;
                 }
-                catch 
+                catch
                 {
                     System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
                     retries++;
@@ -58,9 +118,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 try
                 {
+                    
                     var collection = GetCollection(obj);
                     var cursorAsync = await collection.FindAsync(
-                        __filterBuilder.Eq(x => x.Key, key));
+                        __filterBuilder.Eq(x => x.Key, key),
+                        __findOptions);
                     return await cursorAsync.FirstOrDefaultAsync();                    
                 }
                 catch
