@@ -69,6 +69,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 throw new ArgumentNullException(nameof(options));
             }
 
+            this.CreateIndexes();
+
             var utcNow = DateTimeOffset.UtcNow;
             if (!options.SlidingExpiration.HasValue
                 && !options.AbsoluteExpiration.HasValue

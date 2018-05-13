@@ -13,9 +13,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
         static private readonly ProjectionDefinition<CacheItemModel> __shortProjectionDefinition;
         static private readonly FindOptions<CacheItemModel> __findOptions;
         static private bool __commandForCreatingIndexAlreadySent;
+        static private object __lockIndexCreation;
 
         static MongoDBCacheExtensions()
         {
+            __lockIndexCreation = new object();
             __filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
             __updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
             var projectionBuilder = new ProjectionDefinitionBuilder<CacheItemModel>();
@@ -30,7 +32,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 Projection = __shortProjectionDefinition,
                 Limit = 1
             };
-            __commandForCreatingIndexAlreadySent = false;
+            lock (__lockIndexCreation)
+            {
+                __commandForCreatingIndexAlreadySent = false;
+            }
         }
 
         public static IMongoCollection<CacheItemModel> GetCollection(this MongoDBCache obj)
@@ -44,44 +49,50 @@ namespace Microsoft.Extensions.Caching.MongoDB
         {
             if (!__commandForCreatingIndexAlreadySent)
             {
-                if (!obj.Options.CreateCoverIndex && !obj.Options.CreateTTLIndex)
+                lock (__lockIndexCreation)
                 {
-                    __commandForCreatingIndexAlreadySent = true;
-                }
-                else
-                {
-                    var models = new List<CreateIndexModel<CacheItemModel>>();
-                    var indexBuilder = new IndexKeysDefinitionBuilder<CacheItemModel>();
-                    if (obj.Options.CreateCoverIndex)
+                    if (!__commandForCreatingIndexAlreadySent)
                     {
-                        var indexCoverQueryColumns = indexBuilder
-                            .Ascending(x => x.Key)
-                            .Ascending(x => x.Value)
-                            .Ascending(x => x.SlidingTimeTicks)
-                            .Ascending(x => x._absoluteExpirationDateTimeUtc)
-                            .Ascending(x => x._effectiveExpirationDateTimeUtc);
-                        var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
+                        if (!obj.Options.CreateCoverIndex && !obj.Options.CreateTTLIndex)
                         {
-                            Background = background,
-                            Name = "fullItemIndex"
-                        };
-                        models.Add(new CreateIndexModel<CacheItemModel>(indexCoverQueryColumns, indexCoverQueryOptions));
-                    }
+                            __commandForCreatingIndexAlreadySent = true;
+                        }
+                        else
+                        {
+                            var models = new List<CreateIndexModel<CacheItemModel>>();
+                            var indexBuilder = new IndexKeysDefinitionBuilder<CacheItemModel>();
+                            if (obj.Options.CreateCoverIndex)
+                            {
+                                var indexCoverQueryColumns = indexBuilder
+                                    .Ascending(x => x.Key)
+                                    .Ascending(x => x.Value)
+                                    .Ascending(x => x.SlidingTimeTicks)
+                                    .Ascending(x => x._absoluteExpirationDateTimeUtc)
+                                    .Ascending(x => x._effectiveExpirationDateTimeUtc);
+                                var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
+                                {
+                                    Background = background,
+                                    Name = "fullItemIndex"
+                                };
+                                models.Add(new CreateIndexModel<CacheItemModel>(indexCoverQueryColumns, indexCoverQueryOptions));
+                            }
 
-                    if (obj.Options.CreateTTLIndex)
-                    {
-                        var TTLIndexColumns = indexBuilder
-                            .Ascending(x => x._effectiveExpirationDateTimeUtc);
-                        var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
-                        {
-                            Background = background,
-                            ExpireAfter = TimeSpan.Zero,
-                            Name = "TTLItemIndex"
-                        };
-                        models.Add(new CreateIndexModel<CacheItemModel>(TTLIndexColumns, TTLIndexOptions));
+                            if (obj.Options.CreateTTLIndex)
+                            {
+                                var TTLIndexColumns = indexBuilder
+                                    .Ascending(x => x._effectiveExpirationDateTimeUtc);
+                                var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
+                                {
+                                    Background = background,
+                                    ExpireAfter = TimeSpan.Zero,
+                                    Name = "TTLItemIndex"
+                                };
+                                models.Add(new CreateIndexModel<CacheItemModel>(TTLIndexColumns, TTLIndexOptions));
+                            }
+                            GetCollection(obj).Indexes.CreateMany(models);
+                            __commandForCreatingIndexAlreadySent = true;
+                        }
                     }
-                    GetCollection(obj).Indexes.CreateMany(models);
-                    __commandForCreatingIndexAlreadySent = true;
                 }
             }
         }
