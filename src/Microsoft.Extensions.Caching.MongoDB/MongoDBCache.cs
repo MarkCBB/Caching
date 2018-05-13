@@ -43,7 +43,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 return null;
             }
 
-            var effectiveExpirationTimeUtc = GetEffectiveExpirationTimeUtc(item, DateTimeOffset.UtcNow);
+            var effectiveExpirationTimeUtc = CacheItemModel.GetEffectiveExpirationTimeUtc(item, DateTimeOffset.UtcNow);
             if (effectiveExpirationTimeUtc != item.EffectiveExpirationTimeUtc)
             {
                 this.TryUpdateEffectiveExpirationTimeUtc(key, effectiveExpirationTimeUtc);
@@ -79,56 +79,15 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     + "If AbsoluteExpiration is detailed must be greather than current time");
             }
 
-            CacheItemModel newItem = CreateNewItem(key, value, options, utcNow);
+            CacheItemModel newItem = CacheItemModel.CreateNewItem(
+                key,
+                value,
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
 
             this.TryInsertItem(newItem);
-        }
-
-        public static CacheItemModel CreateNewItem(string key, byte[] value, DistributedCacheEntryOptions options, DateTimeOffset utcNow)
-        {
-            var absoluteExpirationTimeUtc = DateTimeOffset.MinValue;
-            if (options.AbsoluteExpiration.HasValue && options.AbsoluteExpiration.Value > utcNow)
-            {
-                absoluteExpirationTimeUtc = options.AbsoluteExpiration.Value.UtcDateTime;
-            }
-            else
-            {
-                if (options.AbsoluteExpirationRelativeToNow.HasValue && options.AbsoluteExpirationRelativeToNow.Value.Ticks > 0)
-                {
-                    absoluteExpirationTimeUtc = (utcNow + options.AbsoluteExpirationRelativeToNow.Value);
-                }
-            }
-
-            var newItem = new CacheItemModel()
-            {
-                Key = key,
-                Value = value,
-                AbsoluteExpirationTimeUtc = absoluteExpirationTimeUtc,
-                SlidingTimeTicks = (options.SlidingExpiration.HasValue && options.SlidingExpiration.Value.Ticks > 0) ? (options.SlidingExpiration.Value.Ticks) : 0
-            };
-            
-            newItem.EffectiveExpirationTimeUtc = GetEffectiveExpirationTimeUtc(newItem, utcNow);
-            return newItem;
-        }
-
-        private static DateTimeOffset GetEffectiveExpirationTimeUtc(CacheItemModel item, DateTimeOffset utcNow)
-        {
-            if (item.SlidingTimeTicks == 0)
-            {
-                return item.AbsoluteExpirationTimeUtc;
-            }
-
-            var SlidingExpirationDate = utcNow.AddTicks(item.SlidingTimeTicks);
-
-            if ((item.AbsoluteExpirationTimeUtc == DateTimeOffset.MinValue) ||
-                (SlidingExpirationDate < item.AbsoluteExpirationTimeUtc))
-            {
-                return SlidingExpirationDate;
-            }
-            else
-            {
-                return item.AbsoluteExpirationTimeUtc;
-            }
         }
 
         public void Dispose()

@@ -85,5 +85,58 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         [BsonIgnore]
         public DateTimeOffset EffectiveExpirationTimeUtc;
+
+        public static CacheItemModel CreateNewItem(
+            string key,
+            byte[] value,
+            TimeSpan? AbsoluteExpirationRelativeToNow,
+            DateTimeOffset? AbsoluteExpiration,
+            TimeSpan? SlidingExpiration,
+            DateTimeOffset utcNow)
+        {
+            var absoluteExpirationTimeUtc = DateTimeOffset.MinValue;
+            if (AbsoluteExpiration.HasValue && AbsoluteExpiration.Value > utcNow)
+            {
+                absoluteExpirationTimeUtc = AbsoluteExpiration.Value.UtcDateTime;
+            }
+            else
+            {
+                if (AbsoluteExpirationRelativeToNow.HasValue && AbsoluteExpirationRelativeToNow.Value.Ticks > 0)
+                {
+                    absoluteExpirationTimeUtc = (utcNow + AbsoluteExpirationRelativeToNow.Value);
+                }
+            }
+
+            var newItem = new CacheItemModel()
+            {
+                Key = key,
+                Value = value,
+                AbsoluteExpirationTimeUtc = absoluteExpirationTimeUtc,
+                SlidingTimeTicks = (SlidingExpiration.HasValue && SlidingExpiration.Value.Ticks > 0) ? (SlidingExpiration.Value.Ticks) : 0
+            };
+
+            newItem.EffectiveExpirationTimeUtc = GetEffectiveExpirationTimeUtc(newItem, utcNow);
+            return newItem;
+        }
+
+        public static DateTimeOffset GetEffectiveExpirationTimeUtc(CacheItemModel item, DateTimeOffset utcNow)
+        {
+            if (item.SlidingTimeTicks == 0)
+            {
+                return item.AbsoluteExpirationTimeUtc;
+            }
+
+            var SlidingExpirationDate = utcNow.AddTicks(item.SlidingTimeTicks);
+
+            if ((item.AbsoluteExpirationTimeUtc == DateTimeOffset.MinValue) ||
+                (SlidingExpirationDate < item.AbsoluteExpirationTimeUtc))
+            {
+                return SlidingExpirationDate;
+            }
+            else
+            {
+                return item.AbsoluteExpirationTimeUtc;
+            }
+        }
     }
 }

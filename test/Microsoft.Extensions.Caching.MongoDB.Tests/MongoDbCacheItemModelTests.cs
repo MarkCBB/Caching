@@ -103,7 +103,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
 
             // Act
-            var item = MongoDBCache.CreateNewItem("someKey", new byte[0], options, utcNow);
+            var item = CacheItemModel.CreateNewItem(
+                "someKey",
+                new byte[0],
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
 
             // Assert
             Assert.Equal(options.AbsoluteExpiration, item.EffectiveExpirationTimeUtc);
@@ -121,7 +127,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
 
             // Act
-            var item = MongoDBCache.CreateNewItem("someKey", new byte[0], options, utcNow);
+            var item = CacheItemModel.CreateNewItem(
+                "someKey",
+                new byte[0],
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
 
             // Assert
             Assert.Equal(utcNow + options.SlidingExpiration.Value, item.EffectiveExpirationTimeUtc);
@@ -139,7 +151,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
 
             // Act
-            var item = MongoDBCache.CreateNewItem("someKey", new byte[0], options, utcNow);
+            var item = CacheItemModel.CreateNewItem(
+                "someKey",
+                new byte[0],
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
 
             // Assert
             Assert.Equal(utcNow + options.AbsoluteExpirationRelativeToNow, item.EffectiveExpirationTimeUtc);
@@ -157,7 +175,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
 
             // Act
-            var item = MongoDBCache.CreateNewItem("someKey", new byte[0], options, utcNow);
+            var item = CacheItemModel.CreateNewItem(
+                "someKey",
+                new byte[0],
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
 
             // Assert
             Assert.Equal(utcNow + options.SlidingExpiration, item.EffectiveExpirationTimeUtc);
