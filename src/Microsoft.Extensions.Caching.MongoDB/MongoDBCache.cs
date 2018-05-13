@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public byte[] Get(string key)
         {
-            if (key == null)
+            if (string.IsNullOrEmpty(key))
             {
                 throw new ArgumentNullException(nameof(key));
             }
