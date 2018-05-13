@@ -23,7 +23,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .Include(x => x.Key)
                 .Include(x => x.Value)
                 .Include(x => x.SlidingTimeTicks)
-                .Include(x => x._absoluteExpirationTimeUtc);
+                .Include(x => x._absoluteExpirationDateTimeUtc);
             __findOptions = new FindOptions<CacheItemModel>()
             {
                 Projection = __shortProjectionDefinition,
@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
         }
 
-        public static void CreateCoverIndex(this MongoDBCache obj, bool background = true)
+        public static void CreateIndexes(this MongoDBCache obj, bool background = true)
         {
             if (!__commandForCreatingIndexAlreadySent)
             {
@@ -57,7 +57,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                             .Ascending(x => x.Key)
                             .Ascending(x => x.Value)
                             .Ascending(x => x.SlidingTimeTicks)
-                            .Ascending(x => x._absoluteExpirationTimeUtc);
+                            .Ascending(x => x._absoluteExpirationDateTimeUtc);
                         var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
                         {
                             Background = background,
@@ -69,7 +69,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     if (obj.Options.CreateTTLIndex)
                     {
                         var TTLIndexColumns = indexBuilder
-                            .Ascending(x => x._effectiveExpirationTimeUtc);
+                            .Ascending(x => x._effectiveExpirationDateTimeUtc);
                         var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
                         {
                             Background = background,

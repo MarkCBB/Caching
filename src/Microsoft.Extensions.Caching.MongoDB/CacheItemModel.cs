@@ -49,11 +49,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public long SlidingTimeTicks { get; set; }
 
         [BsonElement("AbsoluteExpirationTimeUtc")]
-        private DateTime _absoluteExpirationTimeUtc
+        [BsonDateTimeOptions(DateOnly = false)]
+        internal DateTime _absoluteExpirationDateTimeUtc
         {
             get
             {
-                return AbsoluteExpirationTimeUtc.Date;
+                return new DateTime(
+                    ticks: AbsoluteExpirationTimeUtc.UtcTicks,
+                    kind: DateTimeKind.Utc);
             }
             set
             {
@@ -62,11 +65,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [BsonElement("EffectiveExpirationTimeUtc")]
-        private DateTime _effectiveExpirationTimeUtc
+        [BsonDateTimeOptions(DateOnly = false)]
+        internal DateTime _effectiveExpirationDateTimeUtc
         {
             get
             {
-                return EffectiveExpirationTimeUtc.Date;
+                return new DateTime(
+                    ticks: EffectiveExpirationTimeUtc.UtcTicks,
+                    kind: DateTimeKind.Utc);                
             }
             set
             {
