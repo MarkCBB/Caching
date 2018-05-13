@@ -23,7 +23,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .Include(x => x.Key)
                 .Include(x => x.Value)
                 .Include(x => x.SlidingTimeTicks)
-                .Include(x => x._absoluteExpirationDateTimeUtc);
+                .Include(x => x._absoluteExpirationDateTimeUtc)
+                .Include(x => x._effectiveExpirationDateTimeUtc);
             __findOptions = new FindOptions<CacheItemModel>()
             {
                 Projection = __shortProjectionDefinition,
@@ -57,7 +58,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                             .Ascending(x => x.Key)
                             .Ascending(x => x.Value)
                             .Ascending(x => x.SlidingTimeTicks)
-                            .Ascending(x => x._absoluteExpirationDateTimeUtc);
+                            .Ascending(x => x._absoluteExpirationDateTimeUtc)
+                            .Ascending(x => x._effectiveExpirationDateTimeUtc);
                         var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
                         {
                             Background = background,
@@ -123,7 +125,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     var cursorAsync = await collection.FindAsync(
                         __filterBuilder.Eq(x => x.Key, key),
                         __findOptions);
-                    return await cursorAsync.FirstOrDefaultAsync();                    
+                    return await cursorAsync.FirstOrDefaultAsync();
                 }
                 catch
                 {
