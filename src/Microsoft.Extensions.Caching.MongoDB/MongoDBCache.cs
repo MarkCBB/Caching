@@ -10,7 +10,7 @@ using MongoDB.Driver;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
-    public class MongoDBCache : IDisposable
+    public class MongoDBCache : IDisposable, IDistributedCache
     {
         public MongoDBCacheOptions Options;
 
@@ -32,10 +32,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public byte[] Get(string key)
         {
-            if (string.IsNullOrEmpty(key))
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ValidateKeyParameter(key);
 
             CacheItemModel item = null;
             if (!this.TryGetItem(key, ref item))
@@ -43,16 +40,100 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 return null;
             }
 
-            var effectiveExpirationTimeUtc = CacheItemModel.GetEffectiveExpirationTimeUtc(item, DateTimeOffset.UtcNow);
-            if (effectiveExpirationTimeUtc != item.EffectiveExpirationTimeUtc)
-            {
-                this.TryUpdateEffectiveExpirationTimeUtc(key, effectiveExpirationTimeUtc);
-            }
+            this.CheckAndUpdateEffectiveExpirationTime(key, item);
+
+            return item.Value;
+        }     
+
+        public async Task<byte[]> GetAsync(string key, CancellationToken token = default(CancellationToken))
+        {
+            ValidateKeyParameter(key);
+
+            var item = await this.TryGetItemAsync(key, token);
+            await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
 
             return item.Value;
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+            ValidateArguments(key, value, options);
+
+            this.CreateIndexes();
+
+            ValidateOptions(options);
+
+            var utcNow = DateTimeOffset.UtcNow;
+
+            CacheItemModel newItem = CacheItemModel.CreateNewItem(
+                key,
+                value,
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
+
+            this.TryInsertItem(newItem);
+        }
+
+        public async Task SetAsync(
+            string key,
+            byte[] value,
+            DistributedCacheEntryOptions options,
+            CancellationToken token = default(CancellationToken))
+        {
+            ValidateArguments(key, value, options);
+
+            this.CreateIndexes();
+
+            ValidateOptions(options);
+
+            var utcNow = DateTimeOffset.UtcNow;
+
+            CacheItemModel newItem = CacheItemModel.CreateNewItem(
+                key,
+                value,
+                options.AbsoluteExpirationRelativeToNow,
+                options.AbsoluteExpiration,
+                options.SlidingExpiration,
+                utcNow);
+
+            await this.TryInsertItemAsync(newItem, token);
+        }
+
+        public void Remove(string key)
+        {
+            ValidateKeyParameter(key);
+            this.TryDeleteItem(key);
+        }
+
+        async Task IDistributedCache.RemoveAsync(string key, CancellationToken token)
+        {
+            ValidateKeyParameter(key);
+            await this.TryDeleteItemAsync(key, token);
+        }
+
+        public void Refresh(string key)
+        {
+            ValidateKeyParameter(key);
+
+            CacheItemModel item = null;
+
+            this.TryGetItemForRefresh(key, ref item);
+
+            this.CheckAndUpdateEffectiveExpirationTime(key, item);
+        }
+
+        public async Task RefreshAsync(string key, CancellationToken token = default(CancellationToken))
+        {
+            ValidateKeyParameter(key);
+
+            var item = await this.TryGetItemForRefreshAsync(key, token);
+
+            await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
+        }
+
+        private static void ValidateArguments(string key, byte[] value, DistributedCacheEntryOptions options)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -68,10 +149,18 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 throw new ArgumentNullException(nameof(options));
             }
+        }
 
-            this.CreateIndexes();
+        private static void ValidateKeyParameter(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+        }
 
-            var utcNow = DateTimeOffset.UtcNow;
+        private void ValidateOptions(DistributedCacheEntryOptions options)
+        {
             if (!options.SlidingExpiration.HasValue
                 && !options.AbsoluteExpiration.HasValue
                 && !options.AbsoluteExpirationRelativeToNow.HasValue)
@@ -80,21 +169,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     + "must contain a valid value. If SlidingExpiration or AbsoluteExpirationRelativeToNow are detailed must be greather than 0. "
                     + "If AbsoluteExpiration is detailed must be greather than current time");
             }
-
-            CacheItemModel newItem = CacheItemModel.CreateNewItem(
-                key,
-                value,
-                options.AbsoluteExpirationRelativeToNow,
-                options.AbsoluteExpiration,
-                options.SlidingExpiration,
-                utcNow);
-
-            this.TryInsertItem(newItem);
         }
 
         public void Dispose()
         {
-            
+
         }
     }
 }

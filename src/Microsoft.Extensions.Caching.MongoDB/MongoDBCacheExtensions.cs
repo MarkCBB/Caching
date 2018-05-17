@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Extensions.Caching.MongoDB
@@ -10,8 +11,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
     {
         static private readonly FilterDefinitionBuilder<CacheItemModel> __filterBuilder;
         static private readonly UpdateDefinitionBuilder<CacheItemModel> __updateBuilder;        
-        static private readonly ProjectionDefinition<CacheItemModel> __shortProjectionDefinition;
+        static private readonly ProjectionDefinition<CacheItemModel> __fullItemProjectionDefinition;
+        static private readonly ProjectionDefinition<CacheItemModel> __refreshItemProjectionDefinition;
         static private readonly FindOptions<CacheItemModel> __findOptions;
+        static private readonly FindOptions<CacheItemModel> __findRefreshOptions;
+        static private readonly InsertOneOptions __insertOneOptions;
         static private bool __commandForCreatingIndexAlreadySent;
         static private object __lockIndexCreation;
 
@@ -21,17 +25,29 @@ namespace Microsoft.Extensions.Caching.MongoDB
             __filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
             __updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
             var projectionBuilder = new ProjectionDefinitionBuilder<CacheItemModel>();
-            __shortProjectionDefinition = projectionBuilder
+            __fullItemProjectionDefinition = projectionBuilder
                 .Include(x => x.Key)
-                .Include(x => x.Value)
                 .Include(x => x.SlidingTimeTicks)
                 .Include(x => x._absoluteExpirationDateTimeUtc)
-                .Include(x => x._effectiveExpirationDateTimeUtc);
+                .Include(x => x._effectiveExpirationDateTimeUtc)
+                .Include(x => x.Value);
+            __refreshItemProjectionDefinition = projectionBuilder
+                .Include(x => x.Key)
+                .Include(x => x.SlidingTimeTicks)
+                .Include(x => x._absoluteExpirationDateTimeUtc)
+                .Include(x => x._effectiveExpirationDateTimeUtc);                
+
             __findOptions = new FindOptions<CacheItemModel>()
             {
-                Projection = __shortProjectionDefinition,
+                Projection = __fullItemProjectionDefinition,
                 Limit = 1
             };
+            __findRefreshOptions = new FindOptions<CacheItemModel>()
+            {
+                Projection = __refreshItemProjectionDefinition,
+                Limit = 1
+            };
+            __insertOneOptions = new InsertOneOptions();
             lock (__lockIndexCreation)
             {
                 __commandForCreatingIndexAlreadySent = false;
@@ -65,10 +81,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
                             {
                                 var indexCoverQueryColumns = indexBuilder
                                     .Ascending(x => x.Key)
-                                    .Ascending(x => x.Value)
                                     .Ascending(x => x.SlidingTimeTicks)
                                     .Ascending(x => x._absoluteExpirationDateTimeUtc)
-                                    .Ascending(x => x._effectiveExpirationDateTimeUtc);
+                                    .Ascending(x => x._effectiveExpirationDateTimeUtc)
+                                    .Ascending(x => x.Value);
                                 var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
                                 {
                                     Background = background,
@@ -108,7 +124,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     item = GetCollection(obj)
                         .Find(
                         __filterBuilder.Eq(x => x.Key, key))
-                            .Project<CacheItemModel>(__shortProjectionDefinition)
+                            .Project<CacheItemModel>(__fullItemProjectionDefinition)
                             .Limit(1)
                             .FirstOrDefault();
                     return true;
@@ -123,7 +139,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
-        public static async Task<CacheItemModel> TryGetItemAsync(this MongoDBCache obj, string key)
+        public static async Task<CacheItemModel> TryGetItemAsync(
+            this MongoDBCache obj,
+            string key,
+            CancellationToken cancellationToken)
         {
             var retries = 0;
 
@@ -135,7 +154,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     var collection = GetCollection(obj);
                     var cursorAsync = await collection.FindAsync(
                         __filterBuilder.Eq(x => x.Key, key),
-                        __findOptions);
+                        __findOptions,
+                        cancellationToken);
                     return await cursorAsync.FirstOrDefaultAsync();
                 }
                 catch
@@ -170,7 +190,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
-        public static async Task<bool> TrySetItemAsync(this MongoDBCache obj, CacheItemModel item)
+        public static async Task<bool> TryInsertItemAsync(
+            this MongoDBCache obj,
+            CacheItemModel item,
+            CancellationToken cancellationToken)
         {
             var retries = 0;
 
@@ -179,7 +202,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 try
                 {
                     var collection = GetCollection(obj);
-                    await collection.InsertOneAsync(item);
+                    await collection.InsertOneAsync(
+                        item,
+                        __insertOneOptions,
+                        cancellationToken);
                     return true;
                 }
                 catch
@@ -204,7 +230,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     collection.UpdateOne(
                         __filterBuilder.Eq(x => x.Key, key),
                         __updateBuilder.Set(
-                            x => x.EffectiveExpirationTimeUtc,
+                            x => x._effectiveExpirationDateTimeUtc,
                             newRealExpirationTimeUtc));
                     return true;
                 }
@@ -218,7 +244,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
-        public static async Task<bool> TryUpdateEffectiveExpirationTimeUtcAsync(this MongoDBCache obj, string key, DateTimeOffset newRealExpirationTimeUtc)
+        public static async Task<bool> TryUpdateEffectiveExpirationTimeUtcAsync(
+            this MongoDBCache obj,
+            string key,
+            DateTimeOffset newRealExpirationTimeUtc,
+            CancellationToken cancellationToken)
         {
             var retries = 0;
 
@@ -228,10 +258,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 {
                     var collection = GetCollection(obj);
                     await collection.UpdateOneAsync(
-                        __filterBuilder.Eq(x => x.Key, key),
-                        __updateBuilder.Set(
-                            x => x.EffectiveExpirationTimeUtc,
-                            newRealExpirationTimeUtc));
+                        filter: __filterBuilder.Eq(x => x.Key, key),
+                        update: __updateBuilder.Set(
+                            x => x._effectiveExpirationDateTimeUtc,
+                            newRealExpirationTimeUtc),
+                        cancellationToken: cancellationToken);
                     return true;
                 }
                 catch
@@ -244,5 +275,137 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
+        public static bool TryDeleteItem(
+            this MongoDBCache obj,
+            string key)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    GetCollection(obj)
+                        .DeleteOne(
+                        __filterBuilder.Eq(x => x.Key, key));
+                    return true;
+                }
+                catch
+                {
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
+                    retries++;
+                }
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> TryDeleteItemAsync(
+            this MongoDBCache obj,
+            string key,
+            CancellationToken cancellationToken)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    await GetCollection(obj)
+                            .DeleteOneAsync(
+                            __filterBuilder.Eq(x => x.Key, key),
+                            cancellationToken);
+                    return true;
+                }
+                catch
+                {
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
+                    retries++;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool TryGetItemForRefresh(this MongoDBCache obj, string key, ref CacheItemModel item)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    item = GetCollection(obj)
+                        .Find(
+                        __filterBuilder.Eq(x => x.Key, key))
+                            .Project<CacheItemModel>(__refreshItemProjectionDefinition)
+                            .Limit(1)
+                            .FirstOrDefault();
+                    return true;
+                }
+                catch
+                {
+                    System.Threading.Thread.CurrentThread.Join(obj.Options.MillisToWait);
+                    retries++;
+                }
+            }
+
+            return false;
+        }
+
+        public static async Task<CacheItemModel> TryGetItemForRefreshAsync(
+            this MongoDBCache obj,
+            string key,
+            CancellationToken cancellationToken)
+        {
+            var retries = 0;
+
+            while (retries <= obj.Options.MaxRetries)
+            {
+                try
+                {
+                    var collection = GetCollection(obj);
+                    var cursorAsync = await collection.FindAsync(
+                        __filterBuilder.Eq(x => x.Key, key),
+                        __findRefreshOptions,
+                        cancellationToken);
+                    return await cursorAsync.FirstOrDefaultAsync();
+                }
+                catch
+                {
+                    await Task.Delay(obj.Options.MillisToWait);
+                    retries++;
+                }
+            }
+
+            return null;
+        }
+
+        public static void CheckAndUpdateEffectiveExpirationTime(
+            this MongoDBCache obj,
+            string key,
+            CacheItemModel item)
+        {
+            var effectiveExpirationTimeUtc = CacheItemModel.GetEffectiveExpirationTimeUtc(item, DateTimeOffset.UtcNow);
+            if (effectiveExpirationTimeUtc != item.EffectiveExpirationTimeUtc)
+            {
+                obj.TryUpdateEffectiveExpirationTimeUtc(key, effectiveExpirationTimeUtc);
+                item.EffectiveExpirationTimeUtc = effectiveExpirationTimeUtc;
+            }
+        }
+
+        public static async Task CheckAndUpdateEffectiveExpirationTimeAsync(
+            this MongoDBCache obj,
+            string key,
+            CacheItemModel item,
+            CancellationToken token)
+        {
+            var effectiveExpirationTimeUtc = CacheItemModel.GetEffectiveExpirationTimeUtc(item, DateTimeOffset.UtcNow);
+            if (effectiveExpirationTimeUtc != item.EffectiveExpirationTimeUtc)
+            {
+                await obj.TryUpdateEffectiveExpirationTimeUtcAsync(key, effectiveExpirationTimeUtc, token);
+                item.EffectiveExpirationTimeUtc = effectiveExpirationTimeUtc;
+            }
+        }
     }
 }
