@@ -6,6 +6,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class BaseMongoDbTests
     {
+        protected const string SkipReason = "These tests require MongoDb server, please configure an"
+            + " accessible server and adapt the connection string accordingly.";
+
         protected MongoDBCache _mongoCache = null;
 
         public BaseMongoDbTests()

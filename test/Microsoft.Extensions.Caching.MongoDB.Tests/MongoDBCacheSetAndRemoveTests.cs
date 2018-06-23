@@ -8,8 +8,9 @@ using Xunit;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
-    public class MongoDBCacheSetAndRemoveTests
+    public class MongoDBCacheSetAndRemoveTests : BaseMongoDbTests
     {
-        
+        // Check that the index is created if specified in the parameters
+        // And also check that no index is created if no specified.
     }
 }

@@ -30,7 +30,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return false;
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void MongoDBCache_InsertingOneCacheItem()
         {
             // Arrange
@@ -52,7 +52,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             Assert.Equal(1, result);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void MongoDBCache_DefaultSlidingTimeTicksIsZero()
         {
             // Arrange
@@ -76,7 +76,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void MongoDBCache_NoValueInAbsoluteExpirationIsDateTimeMinValue()
         {
             // Arrange
@@ -91,14 +91,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 Value = Encoding.ASCII.GetBytes("Test MongoDBCache_InsertingOneCacheItem"),                
                 EffectiveExpirationTimeUtc = effectiveExpirationTimeUtc
             });
-            //Encoding.ASCII.GetString(
             var result = collection.Find(f => f.Key == keyNameValue).FirstOrDefault();
 
             // Assert
             Assert.Equal(DateTimeOffset.MinValue, result.AbsoluteExpirationTimeUtc);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void MongoDBCache_A_Full_Cover_Index_Is_Created()
         {
             // Arrange
