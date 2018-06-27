@@ -28,7 +28,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Act
             try
             {
-                _mongoCache.Set("someKey", new byte[0], options);
+                mongoCache.Set("someKey", new byte[0], options);
             }
             catch
             {
@@ -54,7 +54,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Act
             try
             {
-                _mongoCache.Set("", new byte[0], options);
+                mongoCache.Set("", new byte[0], options);
             }
             catch
             {
@@ -80,7 +80,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Act
             try
             {
-                _mongoCache.Set(null, new byte[0], options);
+                mongoCache.Set(null, new byte[0], options);
             }
             catch
             {

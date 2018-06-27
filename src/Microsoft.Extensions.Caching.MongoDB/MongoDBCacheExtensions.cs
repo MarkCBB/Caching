@@ -61,7 +61,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
         }
 
-        public static void CreateIndexes(this MongoDBCache obj, bool background = true)
+        public static void CreateIndexes(this MongoDBCache obj)
         {
             if (!__commandForCreatingIndexAlreadySent)
             {
@@ -87,7 +87,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                                     .Ascending(x => x.Value);
                                 var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
                                 {
-                                    Background = background,
+                                    Background = obj.Options.CreateIndexesInBackground,
                                     Name = "fullItemIndex"
                                 };
                                 models.Add(new CreateIndexModel<CacheItemModel>(indexCoverQueryColumns, indexCoverQueryOptions));
@@ -99,7 +99,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                                     .Ascending(x => x._effectiveExpirationDateTimeUtc);
                                 var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
                                 {
-                                    Background = background,
+                                    Background = obj.Options.CreateIndexesInBackground,
                                     ExpireAfter = TimeSpan.Zero,
                                     Name = "TTLItemIndex"
                                 };

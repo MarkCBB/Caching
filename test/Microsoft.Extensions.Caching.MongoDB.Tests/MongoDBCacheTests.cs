@@ -18,23 +18,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class MongoDBCacheTests : BaseMongoDbTests
     {
-        private static bool ExistsIndexInListHelper(List<BsonDocument> indexes, string indexName)
-        {
-            foreach (var item in indexes)
-            {
-                if (item["name"] == indexName)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         [Fact(Skip = SkipReason)]
         public void MongoDBCache_InsertingOneCacheItem()
         {
             // Arrange
-            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "InsertingOneCacheItem" + Guid.NewGuid().ToString();
             var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
 
@@ -56,7 +44,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public void MongoDBCache_DefaultSlidingTimeTicksIsZero()
         {
             // Arrange
-            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "DefaultSlidingTimeTicksIsZero" + Guid.NewGuid().ToString();
             var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
 
@@ -80,7 +68,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         public void MongoDBCache_NoValueInAbsoluteExpirationIsDateTimeMinValue()
         {
             // Arrange
-            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "NoValueInAbsoluteExpiration" + Guid.NewGuid().ToString();
             var effectiveExpirationTimeUtc = DateTimeOffset.UtcNow.AddHours(1);
 
@@ -95,21 +83,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             // Assert
             Assert.Equal(DateTimeOffset.MinValue, result.AbsoluteExpirationTimeUtc);
-        }
-
-        [Fact(Skip = SkipReason)]
-        public void MongoDBCache_A_Full_Cover_Index_Is_Created()
-        {
-            // Arrange
-            var collection = MongoDBCacheExtensions.GetCollection(_mongoCache);
-
-            // Act
-            _mongoCache.CreateIndexes(background: false);
-
-            // Assert
-            var indexList = _mongoCache.GetCollection().Indexes.List().ToList();
-            Assert.True(ExistsIndexInListHelper(indexList, "fullItemIndex"));
-            Assert.True(ExistsIndexInListHelper(indexList, "TTLItemIndex"));
         }
     }
 }

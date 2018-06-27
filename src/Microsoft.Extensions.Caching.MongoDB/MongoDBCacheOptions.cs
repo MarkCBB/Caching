@@ -19,6 +19,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             MillisToWait = 500;
             CreateCoverIndex = true;
             CreateTTLIndex = true;
+            CreateIndexesInBackground = true;
         }
 
         /// <summary>
@@ -66,6 +67,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// Default value true (strongly recommended).
         /// </summary>
         public bool CreateTTLIndex { get; set; }
+
+        /// <summary>
+        /// True to create all the indexes in the background
+        /// This parameter is for testing, you shouldn't set to false
+        /// except if you know well what you're doing
+        /// </summary>
+        public bool CreateIndexesInBackground{ get; set; }
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {

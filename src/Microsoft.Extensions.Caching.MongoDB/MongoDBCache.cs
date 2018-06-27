@@ -52,18 +52,25 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var item = await this.TryGetItemAsync(key, token);
             await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
 
-            return item.Value;
+            return item.Value; 
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+            Set(key, value, options, DateTimeOffset.UtcNow);
+        }
+
+        public void Set(
+            string key,
+            byte[] value,
+            DistributedCacheEntryOptions options,
+            DateTimeOffset utcNow)
         {
             ValidateArguments(key, value, options);
 
             this.CreateIndexes();
 
             ValidateOptions(options);
-
-            var utcNow = DateTimeOffset.UtcNow;
 
             CacheItemModel newItem = CacheItemModel.CreateNewItem(
                 key,
@@ -76,10 +83,20 @@ namespace Microsoft.Extensions.Caching.MongoDB
             this.TryInsertItem(newItem);
         }
 
+        public Task SetAsync(
+            string key,
+            byte[] value,
+            DistributedCacheEntryOptions options,
+            CancellationToken token = default(CancellationToken))
+        {
+            return SetAsync(key, value, options, DateTimeOffset.UtcNow, token);
+        }
+
         public async Task SetAsync(
             string key,
             byte[] value,
             DistributedCacheEntryOptions options,
+            DateTimeOffset utcNow,
             CancellationToken token = default(CancellationToken))
         {
             ValidateArguments(key, value, options);
@@ -87,8 +104,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
             this.CreateIndexes();
 
             ValidateOptions(options);
-
-            var utcNow = DateTimeOffset.UtcNow;
 
             CacheItemModel newItem = CacheItemModel.CreateNewItem(
                 key,

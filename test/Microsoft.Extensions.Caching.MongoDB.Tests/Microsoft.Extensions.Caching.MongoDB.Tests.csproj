@@ -12,8 +12,4 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionPackageVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Infrastructure\" />
-  </ItemGroup>
-
 </Project>

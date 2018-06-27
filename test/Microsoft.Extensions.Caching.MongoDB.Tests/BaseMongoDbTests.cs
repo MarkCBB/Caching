@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,24 +7,50 @@ namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class BaseMongoDbTests
     {
-        protected const string SkipReason = "These tests require MongoDb server, please configure an"
-            + " accessible server and adapt the connection string accordingly.";
+        //protected const string SkipReason = "These tests require MongoDb server, please configure an"
+        //    + " accessible server and adapt the connection string accordingly.";
 
-        protected MongoDBCache _mongoCache = null;
+        // Ucomment the next line and comment the previous one to run the tests related with MongoDB
+        protected const string SkipReason = null;
+
+        protected const string ConnectionString = "mongodb://mongo1:27018,mongo1:27019,mongo1:27020";
+        protected const string DefaultDatabaseName = "CachingTestsDB";
+        protected const string DefaultCollectionName = "CachingEntriesTestCollection";
+
+        protected MongoDBCache mongoCache = null;
 
         public BaseMongoDbTests()
         {
             var options = new MongoDBCacheOptions()
             {
-                ConnectionString = "mongodb://mongo1:27018,mongo1:27019,mongo1:27020",
-                DatabaseName = "CachingTestsDB",
-                CollectionName = "CachingEntriesTestCollection"
+                ConnectionString = ConnectionString,
+                DatabaseName = DefaultDatabaseName,
+                CollectionName = DefaultCollectionName
             };
-            _mongoCache = new MongoDBCache(options);
+            mongoCache = new MongoDBCache(options);
 
             //Uncomment to clean the test database before to run the test cases.
             //var db = _mongoCache.GetClient();
             //db.DropDatabase(options.DatabaseName);
+        }
+
+        protected static string GetRandomNumber()
+        {
+            var r = new Random();
+            var n = r.Next(1000, 100000);
+            return n.ToString();
+        }
+
+        protected static bool ExistsIndexInListHelper(List<BsonDocument> indexes, string indexName)
+        {
+            foreach (var item in indexes)
+            {
+                if (item["name"] == indexName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
