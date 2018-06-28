@@ -7,11 +7,12 @@ using Xunit;
 namespace Microsoft.Extensions.Caching.MongoDB.Tests
 {
     public class MongoDBCacheCreateIndexInDbTests : BaseMongoDbTests
-    {   
-        // Check that the index is created if specified in the parameters
-        // And also check that no index is created if no specified.
-        // Create a blank database to do it and avoid colision with 
+    {
+        // Checks that the index is created if specified in the parameters
+        // and also checks that no index is created if no specified.
+        // Creates a blank database to do it avoiding colision with 
         // other databases.
+        [Trait("Category", "Indexes1")]
         [Fact(Skip = SkipReason)]
         public void MongoDBCache_CreateAllIndexsDetailedInParameters()
         {
@@ -45,6 +46,7 @@ namespace Microsoft.Extensions.Caching.MongoDB.Tests
             Assert.True(ExistsIndexInListHelper(indexList, "TTLItemIndex"));
         }
 
+        [Trait("Category", "Indexes2")]
         [Fact(Skip = SkipReason)]
         public void MongoDBCache_CreateOnlyTTLIndexDetailedInParameters()
         {
@@ -78,6 +80,7 @@ namespace Microsoft.Extensions.Caching.MongoDB.Tests
             Assert.True(ExistsIndexInListHelper(indexList, "TTLItemIndex"));
         }
 
+        [Trait("Category", "Indexes3")]
         [Fact(Skip = SkipReason)]
         public void MongoDBCache_DoNotCreateAnyIndexDetailedInParameters()
         {
