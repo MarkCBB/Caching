@@ -14,10 +14,10 @@ namespace Microsoft.Extensions.Caching.MongoDB.Tests
         // other databases.
         [Trait("Category", "Indexes1")]
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_CreateAllIndexsDetailedInParameters()
+        public void MongoDBCache_CreateAllIndexesDetailedInParameters()
         {
             // Arrange
-            var databaseName = "CreateAllIndexs_" + GetRandomNumber();
+            var databaseName = "CreateAllIndexes_" + GetRandomNumber();
             var mongoOptions = new MongoDBCacheOptions()
             {
                 ConnectionString = "mongodb://mongo1:27018,mongo1:27019,mongo1:27020",
