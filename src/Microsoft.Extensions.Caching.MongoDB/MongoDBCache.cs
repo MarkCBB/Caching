@@ -35,7 +35,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             ValidateKeyParameter(key);
 
             CacheItemModel item = null;
-            if (!this.TryGetItem(key, ref item))
+            if ((!this.TryGetItem(key, ref item) || item == null))
             {
                 return null;
             }
@@ -50,6 +50,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
             ValidateKeyParameter(key);
 
             var item = await this.TryGetItemAsync(key, token);
+            if (item == null)
+            {
+                return null;
+            }
+
             await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
 
             return item.Value; 

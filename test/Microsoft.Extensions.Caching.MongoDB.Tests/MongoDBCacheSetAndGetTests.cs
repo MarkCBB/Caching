@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
-    public class MongoDBCacheSetAndRemoveTests : BaseMongoDbTests
+    public class MongoDBCacheSetAndGetTests : BaseMongoDbTests
     {
         [Fact(Skip = SkipReason)]
         public void MongoDBCache_AbsoluteExpiration_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration()
@@ -60,8 +60,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var item = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            Assert.Equal((utcNow + options.SlidingExpiration.Value).ToUnixTimeMilliseconds(),
-                item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+            // EffectiveExpirationTimeUtc should be a bit greather than the initial expiration date
+            // and the difference should minor than two seconds
+            Assert.True(
+                (item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds() >=
+                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()) &&
+                ((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2));
             Assert.True(EqualsByteArray(value, itemValue));
         }
 
@@ -77,14 +81,17 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var key = "MongoDBCache_AbsoluteExpirationRelativeToNow_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration" + GetRandomNumber();
+            var value = new byte[] { 15, 16, 17, 18, 20, 5, 6, 7, 8, 9, 10 };
 
             // Act
-            mongoCache.Set(key, new byte[0], options, utcNow);            
+            mongoCache.Set(key, value, options, utcNow);
+            var itemValue = mongoCache.Get(key);
+            var item = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            var item = collection.Find(f => f.Key == key).FirstOrDefault();
             Assert.Equal((utcNow + options.AbsoluteExpirationRelativeToNow).Value.ToUnixTimeMilliseconds(),
                 item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+            Assert.True(EqualsByteArray(value, itemValue));
         }
 
         [Fact(Skip = SkipReason)]
@@ -99,14 +106,40 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var key = "MongoDBCache_AbsoluteExpirationRelativeToNow_Is_After_Sliding_So_Effective_Should_Be_Sliding" + GetRandomNumber();
+            var value = new byte[] { 15, 16, 17, 18, 20, 5, 6, 7, 8, 9, 10 };
 
             // Act
-            mongoCache.Set(key, new byte[0], options, utcNow);            
+            mongoCache.Set(key, value, options, utcNow);
+            // In this case a get will update the AbsoluteExpirationRelativeToNow
+            var itemValue = mongoCache.Get(key);
+            var item = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            var item = collection.Find(f => f.Key == key).FirstOrDefault();
-            Assert.Equal((utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds(),
-                item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+            
+            // EffectiveExpirationTimeUtc should be a bit greather than the initial expiration date
+            // and the difference should minor than two seconds
+            Assert.True(
+                (item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds() >=
+                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()) && 
+                ((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2));
+            Assert.True(EqualsByteArray(value, itemValue));
+        }
+
+        // Se tiene que hacer un test case para demostrar que el comportamiento es correcto
+        // en caso de que se intente obtener un valor con una clave inexistente
+
+        [Fact(Skip = SkipReason)]
+        public void MongoDBCache_Getting_a_non_existing_key_should_be_null()
+        {
+            // Arrange
+            var key = "MongoDBCache_Getting_a_non_existing_key_should_be_null" + GetRandomNumber();
+
+            // Act
+            // In this case a get will update the AbsoluteExpirationRelativeToNow
+            var itemValue = mongoCache.Get(key);
+
+            // Assert
+            Assert.True(itemValue == null);
         }
     }
 }

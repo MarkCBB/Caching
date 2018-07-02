@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
-namespace Microsoft.Extensions.Caching.MongoDB.Tests
+namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class MongoDBCacheCreateIndexInDbTests : BaseMongoDbTests
     {
