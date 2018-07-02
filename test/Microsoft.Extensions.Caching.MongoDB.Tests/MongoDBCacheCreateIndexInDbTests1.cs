@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
+    [Trait("Category", "MongoDBCacheCreateIndexInDbTests1")]
     public class MongoDBCacheCreateIndexInDbTests1 : BaseMongoDbTests
     {
         // Checks that the index is created if specified in the parameters

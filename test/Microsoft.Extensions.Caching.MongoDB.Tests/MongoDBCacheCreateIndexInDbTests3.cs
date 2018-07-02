@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
+    [Trait("Category", "MongoDBCacheCreateIndexInDbTests3")]
     public class MongoDBCacheCreateIndexInDbTests3 : BaseMongoDbTests
     {
         [Fact(Skip = SkipReason)]
