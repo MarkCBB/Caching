@@ -23,16 +23,21 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var key = "MongoDBCache_AbsoluteExpiration_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration" + GetRandomNumber();
-            
+            var value = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
             // Act
-            mongoCache.Set(key, new byte[0], options, utcNow);
+            mongoCache.Set(key, value, options, utcNow);
+            var itemValue = mongoCache.Get(key);
+            var itemInDb = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            var item = collection.Find(f => f.Key == key).FirstOrDefault();
+            
+            // Note that MongoDB will store the data as Unix Time Milliseconds
             Assert.Equal(
                 options.AbsoluteExpiration.Value.ToUnixTimeMilliseconds(),
-                item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
-                // Note that MongoDB will store the data as Unix Time Milliseconds
+                itemInDb.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+
+            Assert.True(EqualsByteArray(value, itemValue));
         }
 
         [Fact(Skip = SkipReason)]
@@ -47,14 +52,17 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var key = "MongoDBCache_AbsoluteExpiration_Is_After_Sliding_So_Effective_Should_Be_Sliding" + GetRandomNumber();
+            var value = new byte[] { 11, 12, 13, 14, 4, 5, 6, 7, 8, 9, 10 };
 
             // Act
-            mongoCache.Set(key, new byte[0], options, utcNow);
+            mongoCache.Set(key, value, options, utcNow);
+            var itemValue = mongoCache.Get(key);
+            var item = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            var item = collection.Find(f => f.Key == key).FirstOrDefault();
             Assert.Equal((utcNow + options.SlidingExpiration.Value).ToUnixTimeMilliseconds(),
                 item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+            Assert.True(EqualsByteArray(value, itemValue));
         }
 
         [Fact(Skip = SkipReason)]

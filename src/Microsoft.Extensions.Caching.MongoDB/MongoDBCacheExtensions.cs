@@ -231,7 +231,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
                         __filterBuilder.Eq(x => x.Key, key),
                         __updateBuilder.Set(
                             x => x._effectiveExpirationDateTimeUtc,
-                            newRealExpirationTimeUtc));
+                            new DateTime(
+                                ticks: newRealExpirationTimeUtc.UtcTicks,
+                                kind: DateTimeKind.Utc)));
                     return true;
                 }
                 catch
@@ -261,7 +263,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
                         filter: __filterBuilder.Eq(x => x.Key, key),
                         update: __updateBuilder.Set(
                             x => x._effectiveExpirationDateTimeUtc,
-                            newRealExpirationTimeUtc),
+                            new DateTime(
+                                    ticks: newRealExpirationTimeUtc.UtcTicks,
+                                    kind: DateTimeKind.Utc)),
                         cancellationToken: cancellationToken);
                     return true;
                 }
