@@ -1,11 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Distributed cache implementation of Microsoft.Extensions.Caching.Distributed.IDistributedCache using MongoDB.</Description>
+    <Description>Distributed cache implementation of Microsoft.Extensions.Caching.Distributed.IDistributedCache using MongoDB.
+This implementation is based on the official made by Microsoft.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>cache;distributedcache;MongoDB</PackageTags>
+    <Authors>MarkCBB</Authors>
+    <Company />
+    <Product />
+    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/MarkCBB/Caching/wiki</PackageProjectUrl>
+    <PackageLicenseUrl />
+    <RepositoryUrl>https://github.com/MarkCBB/Caching</RepositoryUrl>
+    <PackageIconUrl>https://www.nuget.org/Content/gallery/img/default-package-icon.svg</PackageIconUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
