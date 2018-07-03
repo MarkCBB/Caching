@@ -48,7 +48,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Extensions.Caching.MongoDB", "src\Microsoft.Extensions.Caching.MongoDB\Microsoft.Extensions.Caching.MongoDB.csproj", "{318A2CDF-560E-4B0E-BEC7-0DA67B91CA8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Extensions.Caching.MongoDB", "src\Microsoft.Extensions.Caching.MongoDB\MarkCBB.Extensions.Caching.MongoDB.csproj", "{318A2CDF-560E-4B0E-BEC7-0DA67B91CA8E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Extensions.Caching.MongoDB.Tests", "test\Microsoft.Extensions.Caching.MongoDB.Tests\Microsoft.Extensions.Caching.MongoDB.Tests.csproj", "{B8CF5DAE-DD39-4CFE-A330-8D79E7BB98EF}"
 EndProject

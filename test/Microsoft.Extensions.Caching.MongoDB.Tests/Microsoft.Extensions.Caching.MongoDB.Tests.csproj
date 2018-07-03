@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Extensions.Caching.MongoDB\Microsoft.Extensions.Caching.MongoDB.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Extensions.Caching.MongoDB\MarkCBB.Extensions.Caching.MongoDB.csproj" />
   </ItemGroup>
 
   <ItemGroup>
