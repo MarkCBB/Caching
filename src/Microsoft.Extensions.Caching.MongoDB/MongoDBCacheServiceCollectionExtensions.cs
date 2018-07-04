@@ -13,6 +13,23 @@ namespace Microsoft.Extensions.DependencyInjection
     /// </summary>
     public static class MongoDBCacheServiceCollectionExtensions
     {
-        
+        public static IServiceCollection AddDistributedMongoDBCache(this IServiceCollection services, Action<MongoDBCacheOptions> setupAction)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (setupAction == null)
+            {
+                throw new ArgumentNullException(nameof(setupAction));
+            }
+
+            services.AddOptions();
+            services.Configure(setupAction);
+            services.Add(ServiceDescriptor.Singleton<IDistributedCache, MongoDBCache>());
+
+            return services;
+        }
     }
 }
