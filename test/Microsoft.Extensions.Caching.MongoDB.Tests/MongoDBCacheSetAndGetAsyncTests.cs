@@ -120,8 +120,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // and the difference should minor than two seconds
             Assert.True(
                 (item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds() >=
-                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()) &&
-                ((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2));
+                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()));
+            Assert.True((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2);
             Assert.True(EqualsByteArray(value, itemValue));
         }
 
@@ -135,11 +135,35 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var key = "MongoDBCache_Getting_a_non_existing_key_should_be_null" + GetRandomNumber();
 
             // Act
-            // In this case a get will update the AbsoluteExpirationRelativeToNow
             var itemValue = await mongoCache.GetAsync(key);
 
             // Assert
             Assert.True(itemValue == null);
+        }
+
+        [Fact(Skip = SkipReason)]
+        public async void MongoDBCache_Set_the_same_key_twice_should_get_the_last_value()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2),
+                SlidingExpiration = TimeSpan.FromMinutes(1)
+            };
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
+            var key = "MongoDBCache_AbsoluteExpirationRelativeToNow_Is_After_Sliding_So_Effective_Should_Be_Sliding" + GetRandomNumber();
+            var value = new byte[] { 15, 16, 17, 18, 20, 5, 6, 7, 8, 9, 10 };
+            var value2 = new byte[] { 21, 22, 23, 18, 20, 5, 6, 7, 8, 9, 10 };
+
+            // Act
+            await mongoCache.SetAsync(key, value, options, utcNow);
+            await mongoCache.SetAsync(key, value2, options, utcNow);
+            // In this case a get will update the AbsoluteExpirationRelativeToNow
+            var itemValue = await mongoCache.GetAsync(key);
+
+            // Assert
+            Assert.True(EqualsByteArray(value2, itemValue));
         }
     }
 }

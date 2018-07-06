@@ -135,11 +135,35 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var key = "MongoDBCache_Getting_a_non_existing_key_should_be_null" + GetRandomNumber();
 
             // Act
-            // In this case a get will update the AbsoluteExpirationRelativeToNow
             var itemValue = mongoCache.Get(key);
 
             // Assert
             Assert.True(itemValue == null);
+        }
+
+        [Fact(Skip = SkipReason)]
+        public void MongoDBCache_Set_the_same_key_twice_should_get_the_last_value()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2),
+                SlidingExpiration = TimeSpan.FromMinutes(1)
+            };
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
+            var key = "MongoDBCache_AbsoluteExpirationRelativeToNow_Is_After_Sliding_So_Effective_Should_Be_Sliding" + GetRandomNumber();
+            var value = new byte[] { 15, 16, 17, 18, 20, 5, 6, 7, 8, 9, 10 };
+            var value2 = new byte[] { 21, 22, 23, 18, 20, 5, 6, 7, 8, 9, 10 };
+
+            // Act
+            mongoCache.Set(key, value, options, utcNow);
+            mongoCache.Set(key, value2, options, utcNow);
+            // In this case a get will update the AbsoluteExpirationRelativeToNow
+            var itemValue = mongoCache.Get(key);
+
+            // Assert
+            Assert.True(EqualsByteArray(value2, itemValue));
         }
     }
 }

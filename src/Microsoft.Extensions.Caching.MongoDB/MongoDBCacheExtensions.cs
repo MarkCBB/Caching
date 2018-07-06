@@ -15,7 +15,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         static private readonly ProjectionDefinition<CacheItemModel> __refreshItemProjectionDefinition;
         static private readonly FindOptions<CacheItemModel> __findOptions;
         static private readonly FindOptions<CacheItemModel> __findRefreshOptions;
-        static private readonly InsertOneOptions __insertOneOptions;
+        static private readonly UpdateOptions __updateOptions;
         static private bool __commandForCreatingIndexAlreadySent;
         static private object __lockIndexCreation;
 
@@ -47,7 +47,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 Projection = __refreshItemProjectionDefinition,
                 Limit = 1
             };
-            __insertOneOptions = new InsertOneOptions();
+            __updateOptions = new UpdateOptions()
+            {
+                IsUpsert = true
+            };
+           
             lock (__lockIndexCreation)
             {
                 __commandForCreatingIndexAlreadySent = false;
@@ -177,7 +181,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 try
                 {
                     var collection = GetCollection(obj);
-                    collection.InsertOne(item);
+                    var filter = __filterBuilder.Eq(x => x.Key, item.Key);
+                    var updateDefinition = __updateBuilder
+                        .Set(x => x.Key, item.Key)
+                        .Set(x => x.SlidingTimeTicks, item.SlidingTimeTicks)
+                        .Set(x => x._absoluteExpirationDateTimeUtc, item._absoluteExpirationDateTimeUtc)
+                        .Set(x => x._effectiveExpirationDateTimeUtc, item._effectiveExpirationDateTimeUtc)
+                        .Set(x => x.Value, item.Value);
+                    collection.UpdateOne(filter, updateDefinition, __updateOptions);
                     return true;
                 }
                 catch
@@ -202,9 +213,17 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 try
                 {
                     var collection = GetCollection(obj);
-                    await collection.InsertOneAsync(
-                        item,
-                        __insertOneOptions,
+                    var filter = __filterBuilder.Eq(x => x.Key, item.Key);
+                    var updateDefinition = __updateBuilder
+                        .Set(x => x.Key, item.Key)
+                        .Set(x => x.SlidingTimeTicks, item.SlidingTimeTicks)
+                        .Set(x => x._absoluteExpirationDateTimeUtc, item._absoluteExpirationDateTimeUtc)
+                        .Set(x => x._effectiveExpirationDateTimeUtc, item._effectiveExpirationDateTimeUtc)
+                        .Set(x => x.Value, item.Value);
+                    await collection.UpdateOneAsync(
+                        filter,
+                        updateDefinition,
+                        __updateOptions,
                         cancellationToken);
                     return true;
                 }
