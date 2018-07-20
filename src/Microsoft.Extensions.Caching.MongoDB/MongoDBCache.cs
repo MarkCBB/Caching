@@ -45,9 +45,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return item.Value;
         }     
 
-        public async Task<byte[]> GetAsync(string key, CancellationToken token = default(CancellationToken))
+        public async Task<byte[]> GetAsync(string key, CancellationToken token = default)
         {
             ValidateKeyParameter(key);
+
+            if (token != default)
+            {
+                token.ThrowIfCancellationRequested();
+            }
 
             var item = await this.TryGetItemAsync(key, token);
             if (item == null)
@@ -73,8 +78,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
         {
             ValidateArguments(key, value, options);
 
-            this.CreateIndexes();
-
             ValidateOptions(options);
 
             CacheItemModel newItem = CacheItemModel.CreateNewItem(
@@ -92,7 +95,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             string key,
             byte[] value,
             DistributedCacheEntryOptions options,
-            CancellationToken token = default(CancellationToken))
+            CancellationToken token = default)
         {
             return SetAsync(key, value, options, DateTimeOffset.UtcNow, token);
         }
@@ -102,13 +105,16 @@ namespace Microsoft.Extensions.Caching.MongoDB
             byte[] value,
             DistributedCacheEntryOptions options,
             DateTimeOffset utcNow,
-            CancellationToken token = default(CancellationToken))
+            CancellationToken token = default)
         {
             ValidateArguments(key, value, options);
 
-            this.CreateIndexes();
-
             ValidateOptions(options);
+
+            if (token != default)
+            {
+                token.ThrowIfCancellationRequested();
+            }
 
             CacheItemModel newItem = CacheItemModel.CreateNewItem(
                 key,
@@ -130,6 +136,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
         async Task IDistributedCache.RemoveAsync(string key, CancellationToken token)
         {
             ValidateKeyParameter(key);
+
+            if (token != default)
+            {
+                token.ThrowIfCancellationRequested();
+            }
+
             await this.TryDeleteItemAsync(key, token);
         }
 
@@ -144,9 +156,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
             this.CheckAndUpdateEffectiveExpirationTime(key, item);
         }
 
-        public async Task RefreshAsync(string key, CancellationToken token = default(CancellationToken))
+        public async Task RefreshAsync(string key, CancellationToken token = default)
         {
             ValidateKeyParameter(key);
+
+            if (token != default)
+            {
+                token.ThrowIfCancellationRequested();
+            }
 
             var item = await this.TryGetItemForRefreshAsync(key, token);
 

@@ -16,12 +16,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
         static private readonly FindOptions<CacheItemModel> __findOptions;
         static private readonly FindOptions<CacheItemModel> __findRefreshOptions;
         static private readonly UpdateOptions __updateOptions;
-        static private bool __commandForCreatingIndexAlreadySent;
-        static private object __lockIndexCreation;
 
         static MongoDBCacheExtensions()
         {
-            __lockIndexCreation = new object();
             __filterBuilder = new FilterDefinitionBuilder<CacheItemModel>();
             __updateBuilder = new UpdateDefinitionBuilder<CacheItemModel>();
             var projectionBuilder = new ProjectionDefinitionBuilder<CacheItemModel>();
@@ -51,11 +48,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 IsUpsert = true
             };
-           
-            lock (__lockIndexCreation)
-            {
-                __commandForCreatingIndexAlreadySent = false;
-            }
         }
 
         public static IMongoCollection<CacheItemModel> GetCollection(this MongoDBCache obj)
@@ -63,58 +55,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return new MongoClient(obj.Options.ConnectionString)
                 .GetDatabase(obj.Options.DatabaseName)
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
-        }
-
-        public static void CreateIndexes(this MongoDBCache obj)
-        {
-            if (!__commandForCreatingIndexAlreadySent)
-            {
-                lock (__lockIndexCreation)
-                {
-                    if (!__commandForCreatingIndexAlreadySent)
-                    {
-                        if (!obj.Options.CreateCoverIndex && !obj.Options.CreateTTLIndex)
-                        {
-                            __commandForCreatingIndexAlreadySent = true;
-                        }
-                        else
-                        {
-                            var models = new List<CreateIndexModel<CacheItemModel>>();
-                            var indexBuilder = new IndexKeysDefinitionBuilder<CacheItemModel>();
-                            if (obj.Options.CreateCoverIndex)
-                            {
-                                var indexCoverQueryColumns = indexBuilder
-                                    .Ascending(x => x.Key)
-                                    .Ascending(x => x.SlidingTimeTicks)
-                                    .Ascending(x => x._absoluteExpirationDateTimeUtc)
-                                    .Ascending(x => x._effectiveExpirationDateTimeUtc)
-                                    .Ascending(x => x.Value);
-                                var indexCoverQueryOptions = new CreateIndexOptions<CacheItemModel>()
-                                {
-                                    Background = obj.Options.CreateIndexesInBackground,
-                                    Name = "fullItemIndex"
-                                };
-                                models.Add(new CreateIndexModel<CacheItemModel>(indexCoverQueryColumns, indexCoverQueryOptions));
-                            }
-
-                            if (obj.Options.CreateTTLIndex)
-                            {
-                                var TTLIndexColumns = indexBuilder
-                                    .Ascending(x => x._effectiveExpirationDateTimeUtc);
-                                var TTLIndexOptions = new CreateIndexOptions<CacheItemModel>()
-                                {
-                                    Background = obj.Options.CreateIndexesInBackground,
-                                    ExpireAfter = TimeSpan.Zero,
-                                    Name = "TTLItemIndex"
-                                };
-                                models.Add(new CreateIndexModel<CacheItemModel>(TTLIndexColumns, TTLIndexOptions));
-                            }
-                            GetCollection(obj).Indexes.CreateMany(models);
-                            __commandForCreatingIndexAlreadySent = true;
-                        }
-                    }
-                }
-            }
         }
 
         public static bool TryGetItem(this MongoDBCache obj, string key, ref CacheItemModel item)
@@ -152,9 +92,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             while (retries <= obj.Options.MaxRetries)
             {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 try
                 {
-                    
                     var collection = GetCollection(obj);
                     var cursorAsync = await collection.FindAsync(
                         __filterBuilder.Eq(x => x.Key, key),
@@ -210,6 +153,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             while (retries <= obj.Options.MaxRetries)
             {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 try
                 {
                     var collection = GetCollection(obj);
@@ -275,6 +222,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             while (retries <= obj.Options.MaxRetries)
             {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 try
                 {
                     var collection = GetCollection(obj);
@@ -332,6 +283,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             while (retries <= obj.Options.MaxRetries)
             {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 try
                 {
                     await GetCollection(obj)
@@ -385,6 +340,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             while (retries <= obj.Options.MaxRetries)
             {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 try
                 {
                     var collection = GetCollection(obj);

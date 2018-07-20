@@ -17,9 +17,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
             CollectionName = "CacheItems";
             MaxRetries = 240;
             MillisToWait = 500;
-            CreateCoverIndex = true;
-            CreateTTLIndex = true;
-            CreateIndexesInBackground = true;
         }
 
         /// <summary>
@@ -53,27 +50,6 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// means two minutes with one retry every half second.
         /// </summary>
         public int MillisToWait { get; set; }
-
-        /// <summary>
-        /// True to creates an index to ensure that the queries are index covered
-        /// making the queries faster
-        /// Recommended for scenarios with more reads than writes.
-        /// </summary>
-        public bool CreateCoverIndex { get; set; }
-
-        /// <summary>
-        /// True to create a TTL index that will delete the old entries
-        /// in a background process in the servers.
-        /// Default value true (strongly recommended).
-        /// </summary>
-        public bool CreateTTLIndex { get; set; }
-
-        /// <summary>
-        /// True to create all the indexes in the background
-        /// This parameter is for testing, you shouldn't set to false
-        /// except if you know well what you're doing
-        /// </summary>
-        public bool CreateIndexesInBackground{ get; set; }
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {

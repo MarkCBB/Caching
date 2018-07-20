@@ -34,8 +34,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             
             // Note that MongoDB will store the data as Unix Time Milliseconds
             Assert.Equal(
-                options.AbsoluteExpiration.Value.ToUnixTimeMilliseconds(),
-                itemInDb.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+                options.AbsoluteExpiration.Value.ToUnixTimeSeconds(),
+                itemInDb.EffectiveExpirationTimeUtc.ToUnixTimeSeconds());
 
             Assert.True(EqualsByteArray(value, itemValue));
         }
@@ -63,9 +63,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // EffectiveExpirationTimeUtc should be a bit greather than the initial expiration date
             // and the difference should minor than two seconds
             Assert.True(
-                (item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds() >=
-                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()) &&
-                ((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2));
+                (item.EffectiveExpirationTimeUtc.ToUnixTimeSeconds() >=
+                (utcNow + options.SlidingExpiration).Value.ToUnixTimeSeconds()));
             Assert.True(EqualsByteArray(value, itemValue));
         }
 
@@ -89,8 +88,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             var item = collection.Find(f => f.Key == key).FirstOrDefault();
 
             // Assert
-            Assert.Equal((utcNow + options.AbsoluteExpirationRelativeToNow).Value.ToUnixTimeMilliseconds(),
-                item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds());
+            Assert.Equal((utcNow + options.AbsoluteExpirationRelativeToNow).Value.ToUnixTimeSeconds(),
+                item.EffectiveExpirationTimeUtc.ToUnixTimeSeconds());
             Assert.True(EqualsByteArray(value, itemValue));
         }
 
@@ -119,9 +118,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // EffectiveExpirationTimeUtc should be a bit greather than the initial expiration date
             // and the difference should minor than two seconds
             Assert.True(
-                (item.EffectiveExpirationTimeUtc.ToUnixTimeMilliseconds() >=
-                (utcNow + options.SlidingExpiration).Value.ToUnixTimeMilliseconds()) && 
-                ((item.EffectiveExpirationTimeUtc - (utcNow + options.SlidingExpiration).Value).TotalSeconds < 2));
+                (item.EffectiveExpirationTimeUtc.ToUnixTimeSeconds() >=
+                (utcNow + options.SlidingExpiration).Value.ToUnixTimeSeconds()));
             Assert.True(EqualsByteArray(value, itemValue));
         }
 
