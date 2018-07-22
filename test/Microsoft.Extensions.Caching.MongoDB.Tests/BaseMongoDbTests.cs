@@ -67,5 +67,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             return (i == max);
         }
+
+        protected static long ToUnixTimeMilliseconds(DateTime d)
+        {
+            return ((DateTimeOffset)d).ToUnixTimeMilliseconds();
+        }
     }
 }

@@ -25,14 +25,14 @@ namespace Microsoft.Extensions.Caching.MongoDB
             __fullItemProjectionDefinition = projectionBuilder
                 .Include(x => x.Key)
                 .Include(x => x.SlidingTimeTicks)
-                .Include(x => x._absoluteExpirationDateTimeUtc)
-                .Include(x => x._effectiveExpirationDateTimeUtc)
+                .Include(x => x.AbsoluteExpirationTimeUtc)
+                .Include(x => x.EffectiveExpirationTimeUtc)
                 .Include(x => x.Value);
             __refreshItemProjectionDefinition = projectionBuilder
                 .Include(x => x.Key)
                 .Include(x => x.SlidingTimeTicks)
-                .Include(x => x._absoluteExpirationDateTimeUtc)
-                .Include(x => x._effectiveExpirationDateTimeUtc);                
+                .Include(x => x.AbsoluteExpirationTimeUtc)
+                .Include(x => x.EffectiveExpirationTimeUtc);                
 
             __findOptions = new FindOptions<CacheItemModel>()
             {
@@ -128,8 +128,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     var updateDefinition = __updateBuilder
                         .Set(x => x.Key, item.Key)
                         .Set(x => x.SlidingTimeTicks, item.SlidingTimeTicks)
-                        .Set(x => x._absoluteExpirationDateTimeUtc, item._absoluteExpirationDateTimeUtc)
-                        .Set(x => x._effectiveExpirationDateTimeUtc, item._effectiveExpirationDateTimeUtc)
+                        .Set(x => x.AbsoluteExpirationTimeUtc, item.AbsoluteExpirationTimeUtc)
+                        .Set(x => x.EffectiveExpirationTimeUtc, item.EffectiveExpirationTimeUtc)
                         .Set(x => x.Value, item.Value);
                     collection.UpdateOne(filter, updateDefinition, __updateOptions);
                     return true;
@@ -164,8 +164,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     var updateDefinition = __updateBuilder
                         .Set(x => x.Key, item.Key)
                         .Set(x => x.SlidingTimeTicks, item.SlidingTimeTicks)
-                        .Set(x => x._absoluteExpirationDateTimeUtc, item._absoluteExpirationDateTimeUtc)
-                        .Set(x => x._effectiveExpirationDateTimeUtc, item._effectiveExpirationDateTimeUtc)
+                        .Set(x => x.AbsoluteExpirationTimeUtc, item.AbsoluteExpirationTimeUtc)
+                        .Set(x => x.EffectiveExpirationTimeUtc, item.EffectiveExpirationTimeUtc)
                         .Set(x => x.Value, item.Value);
                     await collection.UpdateOneAsync(
                         filter,
@@ -196,7 +196,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     collection.UpdateOne(
                         __filterBuilder.Eq(x => x.Key, key),
                         __updateBuilder.Set(
-                            x => x._effectiveExpirationDateTimeUtc,
+                            x => x.EffectiveExpirationTimeUtc,
                             new DateTime(
                                 ticks: newRealExpirationTimeUtc.UtcTicks,
                                 kind: DateTimeKind.Utc)));
@@ -232,7 +232,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                     await collection.UpdateOneAsync(
                         filter: __filterBuilder.Eq(x => x.Key, key),
                         update: __updateBuilder.Set(
-                            x => x._effectiveExpirationDateTimeUtc,
+                            x => x.EffectiveExpirationTimeUtc,
                             new DateTime(
                                     ticks: newRealExpirationTimeUtc.UtcTicks,
                                     kind: DateTimeKind.Utc)),

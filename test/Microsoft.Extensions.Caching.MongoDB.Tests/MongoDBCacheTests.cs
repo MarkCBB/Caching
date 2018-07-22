@@ -24,7 +24,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "InsertingOneCacheItem" + Guid.NewGuid().ToString();
-            var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
+            var absolutExpirationTime = new DateTime(ticks: DateTimeOffset.UtcNow.AddHours(1).Ticks, kind: DateTimeKind.Utc);
 
             // Act
             collection.InsertOne(new CacheItemModel()
@@ -46,7 +46,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "DefaultSlidingTimeTicksIsZero" + Guid.NewGuid().ToString();
-            var absolutExpirationTime = DateTimeOffset.UtcNow.AddHours(1);
+            var absolutExpirationTime = new DateTime(ticks: DateTimeOffset.UtcNow.AddHours(1).Ticks, kind: DateTimeKind.Utc); 
 
             // Act
             collection.InsertOne(new CacheItemModel()
@@ -70,7 +70,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Arrange
             var collection = MongoDBCacheExtensions.GetCollection(mongoCache);
             var keyNameValue = "NoValueInAbsoluteExpiration" + Guid.NewGuid().ToString();
-            var effectiveExpirationTimeUtc = DateTimeOffset.UtcNow.AddHours(1);
+            var effectiveExpirationTimeUtc = new DateTime(ticks: DateTimeOffset.UtcNow.AddHours(1).Ticks, kind: DateTimeKind.Utc);
 
             // Act
             collection.InsertOne(new CacheItemModel()

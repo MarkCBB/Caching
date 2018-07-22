@@ -48,43 +48,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
         [BsonElement]
         public long SlidingTimeTicks { get; set; }
 
-        [BsonElement("AbsoluteExpirationTimeUtc")]
         [BsonDateTimeOptions(DateOnly = false)]
-        internal DateTime _absoluteExpirationDateTimeUtc
-        {
-            get
-            {
-                return new DateTime(
-                    ticks: AbsoluteExpirationTimeUtc.UtcTicks,
-                    kind: DateTimeKind.Utc);
-            }
-            set
-            {
-                AbsoluteExpirationTimeUtc = value;
-            }
-        }
+        public DateTime AbsoluteExpirationTimeUtc { get; set; }
 
-        [BsonElement("EffectiveExpirationTimeUtc")]
         [BsonDateTimeOptions(DateOnly = false)]
-        internal DateTime _effectiveExpirationDateTimeUtc
-        {
-            get
-            {
-                return new DateTime(
-                    ticks: EffectiveExpirationTimeUtc.UtcTicks,
-                    kind: DateTimeKind.Utc);                
-            }
-            set
-            {
-                EffectiveExpirationTimeUtc = value;
-            }
-        }
-
-        [BsonIgnore]
-        public DateTimeOffset AbsoluteExpirationTimeUtc;
-
-        [BsonIgnore]
-        public DateTimeOffset EffectiveExpirationTimeUtc;
+        public DateTime EffectiveExpirationTimeUtc { get; set; }
 
         public static CacheItemModel CreateNewItem(
             string key,
@@ -94,16 +62,16 @@ namespace Microsoft.Extensions.Caching.MongoDB
             TimeSpan? SlidingExpiration,
             DateTimeOffset utcNow)
         {
-            var absoluteExpirationTimeUtc = DateTimeOffset.MinValue;
+            var AbsoluteExpirationTimeUtc = DateTimeOffset.MinValue;
             if (AbsoluteExpiration.HasValue && AbsoluteExpiration.Value > utcNow)
             {
-                absoluteExpirationTimeUtc = AbsoluteExpiration.Value.UtcDateTime;
+                AbsoluteExpirationTimeUtc = AbsoluteExpiration.Value.UtcDateTime;
             }
             else
             {
                 if (AbsoluteExpirationRelativeToNow.HasValue && AbsoluteExpirationRelativeToNow.Value.Ticks > 0)
                 {
-                    absoluteExpirationTimeUtc = (utcNow + AbsoluteExpirationRelativeToNow.Value);
+                    AbsoluteExpirationTimeUtc = (utcNow + AbsoluteExpirationRelativeToNow.Value);
                 }
             }
 
@@ -111,7 +79,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
             {
                 Key = key,
                 Value = value,
-                AbsoluteExpirationTimeUtc = absoluteExpirationTimeUtc,
+                AbsoluteExpirationTimeUtc = new DateTime(
+                    ticks: AbsoluteExpirationTimeUtc.UtcTicks,
+                    kind: DateTimeKind.Utc),
                 SlidingTimeTicks = (SlidingExpiration.HasValue && SlidingExpiration.Value.Ticks > 0) ? (SlidingExpiration.Value.Ticks) : 0
             };
 
@@ -119,7 +89,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             return newItem;
         }
 
-        public static DateTimeOffset GetEffectiveExpirationTimeUtc(CacheItemModel item, DateTimeOffset utcNow)
+        public static DateTime GetEffectiveExpirationTimeUtc(CacheItemModel item, DateTimeOffset utcNow)
         {
             if (item.SlidingTimeTicks == 0)
             {
@@ -131,7 +101,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
             if ((item.AbsoluteExpirationTimeUtc == DateTimeOffset.MinValue) ||
                 (SlidingExpirationDate < item.AbsoluteExpirationTimeUtc))
             {
-                return SlidingExpirationDate;
+                return new DateTime(
+                    ticks: SlidingExpirationDate.Ticks,
+                    kind: DateTimeKind.Utc);
             }
             else
             {
