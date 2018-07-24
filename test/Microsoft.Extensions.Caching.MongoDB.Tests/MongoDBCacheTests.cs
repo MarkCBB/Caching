@@ -34,7 +34,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 AbsoluteExpirationTimeUtc = absolutExpirationTime,
                 EffectiveExpirationTimeUtc = absolutExpirationTime
             });
-            var result = collection.Count(f => f.Key == keyNameValue);
+            var result = collection.CountDocuments(f => f.Key == keyNameValue);
 
             // Assert
             Assert.Equal(1, result);
