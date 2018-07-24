@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Distributed cache implementation of Microsoft.Extensions.Caching.Distributed.IDistributedCache using MongoDB.
-This implementation is based on the official made by Microsoft.</Description>
+This implementation is based on the official made by Microsoft for SqlServer and Redis.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -16,6 +16,7 @@ This implementation is based on the official made by Microsoft.</Description>
     <RepositoryUrl>https://github.com/MarkCBB/Caching</RepositoryUrl>
     <PackageIconUrl>https://www.nuget.org/Content/gallery/img/default-package-icon.svg</PackageIconUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>This is the release candidate.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
