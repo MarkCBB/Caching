@@ -17,6 +17,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
             CollectionName = "CacheItems";
             MaxRetries = 240;
             MillisToWait = 500;
+            DeleteOldValues = false;
         }
 
         /// <summary>
@@ -50,6 +51,13 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// means two minutes with one retry every half second.
         /// </summary>
         public int MillisToWait { get; set; }
+
+        /// <summary>
+        /// True if the process will send a query in every request to the database
+        /// to delete all expired elements. Strongly recommended to keep as false (default)
+        /// and use the built-in TTL index. Learn more: https://github.com/MarkCBB/Caching/wiki#usage
+        /// </summary>
+        public bool DeleteOldValues { get; set; }
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {

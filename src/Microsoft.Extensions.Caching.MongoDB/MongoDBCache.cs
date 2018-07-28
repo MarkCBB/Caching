@@ -32,6 +32,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public byte[] Get(string key)
         {
+            this.TryDeleteOldValues();
+
             ValidateKeyParameter(key);
 
             CacheItemModel item = null;
@@ -43,10 +45,12 @@ namespace Microsoft.Extensions.Caching.MongoDB
             this.CheckAndUpdateEffectiveExpirationTime(key, item);
 
             return item.Value;
-        }     
+        }
 
         public async Task<byte[]> GetAsync(string key, CancellationToken token = default)
         {
+            await this.TryDeleteOldValuesAsync(token);
+
             ValidateKeyParameter(key);
 
             if (token != default)
@@ -76,6 +80,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             DistributedCacheEntryOptions options,
             DateTimeOffset utcNow)
         {
+            this.TryDeleteOldValues();
+
             ValidateArguments(key, value, options);
 
             ValidateOptions(options);
@@ -107,6 +113,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
             DateTimeOffset utcNow,
             CancellationToken token = default)
         {
+            await this.TryDeleteOldValuesAsync();
+
             ValidateArguments(key, value, options);
 
             ValidateOptions(options);
@@ -129,12 +137,17 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public void Remove(string key)
         {
+            this.TryDeleteOldValues();
+
             ValidateKeyParameter(key);
+
             this.TryDeleteItem(key);
         }
 
         async Task IDistributedCache.RemoveAsync(string key, CancellationToken token)
         {
+            await this.TryDeleteOldValuesAsync();
+
             ValidateKeyParameter(key);
 
             if (token != default)
@@ -147,6 +160,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public void Refresh(string key)
         {
+            this.TryDeleteOldValues();
+
             ValidateKeyParameter(key);
 
             CacheItemModel item = null;
@@ -158,6 +173,8 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
         public async Task RefreshAsync(string key, CancellationToken token = default)
         {
+            await this.TryDeleteOldValuesAsync();
+
             ValidateKeyParameter(key);
 
             if (token != default)

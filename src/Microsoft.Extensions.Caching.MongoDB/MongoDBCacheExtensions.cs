@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .Include(x => x.Key)
                 .Include(x => x.SlidingTimeTicks)
                 .Include(x => x.AbsoluteExpirationTimeUtc)
-                .Include(x => x.EffectiveExpirationTimeUtc);                
+                .Include(x => x.EffectiveExpirationTimeUtc);
 
             __findOptions = new FindOptions<CacheItemModel>()
             {
@@ -56,6 +56,50 @@ namespace Microsoft.Extensions.Caching.MongoDB
                 .GetDatabase(obj.Options.DatabaseName)
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
         }
+
+
+        public static bool TryDeleteOldValues(this MongoDBCache obj)
+        {
+            if (obj.Options.DeleteOldValues)
+            {
+                var __deleteOldFilter = __filterBuilder.Lt(x => x.EffectiveExpirationTimeUtc, DateTime.UtcNow);
+                try
+                {
+                    GetCollection(obj).DeleteMany(__deleteOldFilter);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        public static async Task<bool> TryDeleteOldValuesAsync(
+            this MongoDBCache obj,
+            CancellationToken cancellationToken = default)
+        {
+            if (obj.Options.DeleteOldValues)
+            {
+                if (cancellationToken != default)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                var __deleteOldFilter = __filterBuilder.Lt(x => x.EffectiveExpirationTimeUtc, DateTime.UtcNow);
+                try
+                {
+                    await GetCollection(obj).DeleteManyAsync(__deleteOldFilter, cancellationToken);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
 
         public static bool TryGetItem(this MongoDBCache obj, string key, ref CacheItemModel item)
         {

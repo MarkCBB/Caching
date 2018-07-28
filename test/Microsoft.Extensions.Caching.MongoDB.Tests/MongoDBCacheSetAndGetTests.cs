@@ -163,5 +163,86 @@ namespace Microsoft.Extensions.Caching.MongoDB
             // Assert
             Assert.True(EqualsByteArray(value2, itemValue));
         }
+
+        [Fact(Skip = SkipReason)]
+        public void MongoDBCache_old_documents_are_deleted_if_Delete_old_values_is_true()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMilliseconds(1)
+            };
+            var cacheOptionsWithDelete = new MongoDBCacheOptions()
+            {
+                ConnectionString = ConnectionString,
+                DatabaseName = DefaultDatabaseName + "WithNoTTL" + GetRandomNumber(), // to make sure that there is no TTL index created
+                CollectionName = DefaultCollectionName,
+                DeleteOldValues = true
+            };
+            var mongoCacheWithDelete = new MongoDBCache(cacheOptionsWithDelete);
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCacheWithDelete);
+            var key = "MongoDBCache_old_documents_are_deleted_if_Delete_old_values_is_true-1" + GetRandomNumber();
+            var key2 = "MongoDBCache_old_documents_are_deleted_if_Delete_old_values_is_true-2" + GetRandomNumber();
+            var value = new byte[] { 21, 22, 23, 24, 25, 26, 6, 7, 8, 9, 10 };
+            var value2 = new byte[] { 27, 28, 29, 30, 40, 5, 6, 7, 8, 9, 10 };
+
+            // Act
+            mongoCacheWithDelete.Set(key, value, options, utcNow);
+            mongoCacheWithDelete.Set(key2, value2, options, utcNow);
+            System.Threading.Tasks.Task.Delay(1000).Wait();
+            var itemValue = mongoCacheWithDelete.Get(key);
+            var itemValue2 = mongoCacheWithDelete.Get(key2);
+
+            // Assert
+
+            // Asserting that all items are deleted because:
+            // first get removes all inserted values 
+            // second get does not have any item to fetch.
+            // so all gets should be null
+            Assert.True(itemValue == null);
+            Assert.True(itemValue2 == null);
+        }
+
+        [Fact(Skip = SkipReason)]
+        public void MongoDBCache_documents_not_old_are_not_deleted_if_Delete_old_values_is_true()
+        {
+            // Arrange
+            var utcNow = DateTimeOffset.UtcNow;
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMilliseconds(60000)
+            };
+            var cacheOptionsWithDelete = new MongoDBCacheOptions()
+            {
+                ConnectionString = ConnectionString,
+                DatabaseName = DefaultDatabaseName + "WithNoTTL" + GetRandomNumber(), // to make sure that there is no TTL index created
+                CollectionName = DefaultCollectionName,
+                DeleteOldValues = true
+            };
+            var mongoCacheWithDelete = new MongoDBCache(cacheOptionsWithDelete);
+            var collection = MongoDBCacheExtensions.GetCollection(mongoCacheWithDelete);
+            var key = "MongoDBCache_documents_not_old_are_not_deleted_if_Delete_old_values_is_true-1" + GetRandomNumber();
+            var key2 = "MongoDBCache_documents_not_old_are_not_deleted_if_Delete_old_values_is_true-2" + GetRandomNumber();
+            var value = new byte[] { 21, 22, 23, 24, 25, 26, 6, 7, 8, 9, 10 };
+            var value2 = new byte[] { 27, 28, 29, 30, 40, 5, 6, 7, 8, 9, 10 };
+
+            // Act
+            mongoCacheWithDelete.Set(key, value, options, utcNow);
+            mongoCacheWithDelete.Set(key2, value2, options, utcNow);
+            var itemValue = mongoCacheWithDelete.Get(key);
+            var itemValue2 = mongoCacheWithDelete.Get(key2);
+
+            // Assert
+
+            // Asserting that all items are deleted because:
+            // first get removes all inserted values 
+            // second get does not have any item to fetch.
+            // so all gets should be null
+            Assert.True(itemValue != null);
+            Assert.True(itemValue2 != null);
+            Assert.True(EqualsByteArray(value, itemValue));
+            Assert.True(EqualsByteArray(value2, itemValue2));
+        }
     }
 }
