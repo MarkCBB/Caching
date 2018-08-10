@@ -7,11 +7,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
 {
     public class BaseMongoDbTests
     {
-        //protected const string SkipReason = "These tests require MongoDb server, please configure an"
-        //   + " accessible server and adapt the connection string accordingly.";
+        protected const string SkipReason = "These tests require MongoDb server, please configure an"
+           + " accessible server and adapt the connection string accordingly.";
 
         // Ucomment the next line and comment the previous one to run the tests related with MongoDB
-        protected const string SkipReason = null;
+        //protected const string SkipReason = null;
 
         protected const string ConnectionString = "mongodb://mongo1:27018,mongo1:27019,mongo1:27020";
         protected const string DefaultDatabaseName = "CachingTestsDB";

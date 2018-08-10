@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
 
-            return item.Value; 
+            return item.Value;
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
@@ -166,9 +166,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             CacheItemModel item = null;
 
-            this.TryGetItemForRefresh(key, ref item);
-
-            this.CheckAndUpdateEffectiveExpirationTime(key, item);
+            if (this.TryGetItemForRefresh(key, ref item) && item != null)
+            {
+                this.CheckAndUpdateEffectiveExpirationTime(key, item);
+            }
         }
 
         public async Task RefreshAsync(string key, CancellationToken token = default)
@@ -184,7 +185,10 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             var item = await this.TryGetItemForRefreshAsync(key, token);
 
-            await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
+            if (item != null)
+            {
+                await this.CheckAndUpdateEffectiveExpirationTimeAsync(key, item, token);
+            }
         }
 
         private static void ValidateArguments(string key, byte[] value, DistributedCacheEntryOptions options)

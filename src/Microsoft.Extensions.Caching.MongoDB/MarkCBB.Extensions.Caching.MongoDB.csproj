@@ -16,9 +16,7 @@ This implementation is based on the official made by Microsoft for SqlServer and
     <RepositoryUrl>https://github.com/MarkCBB/Caching</RepositoryUrl>
     <PackageIconUrl>https://www.nuget.org/Content/gallery/img/default-package-icon.svg</PackageIconUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>This release adds the feature to check and remove the expired values in each request.
-    By default is disabled and is possible to enable it setting the DeleteOldValues flag to true.
-    Is not recommended to enable this feature as is more performant to rely in the TTL index built-in MongoDB.</PackageReleaseNotes>
+    <PackageReleaseNotes>An unexpected exception was thrown trying to refresh a non existing item. This release fixes this issue.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

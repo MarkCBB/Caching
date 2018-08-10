@@ -140,6 +140,20 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
+        public async void MongoDBCache_Refreshing_a_non_existing_key_should_be_null()
+        {
+            // Arrange
+            var key = "MongoDBCache_Refreshing_a_non_existing_key_should_be_null" + GetRandomNumber();
+
+            // Act
+            await mongoCache.RefreshAsync(key);
+
+            // Assert
+            // No exception until here
+            Assert.True(true);
+        }
+
+        [Fact(Skip = SkipReason)]
         public async void MongoDBCache_Set_the_same_key_twice_should_get_the_last_value()
         {
             // Arrange

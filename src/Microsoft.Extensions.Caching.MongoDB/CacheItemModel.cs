@@ -9,8 +9,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
     /*
      Consider:
      * MongoDB does not allow server side update operations based
-       in the results of some calculation or condition of some field(s)
-       in the same document to be updated.
+       in some calculation of some fields of the same document to be updated.
      * The $inc field update operator only works with numerical types.
      
      Therefore:
@@ -18,9 +17,9 @@ namespace Microsoft.Extensions.Caching.MongoDB
        is fetched executing the command FindOneAndUpdate and
        using the $inc operator.
      * A field with the effective expiration timestamp will be set.
-     * Is much more efficient to work only with an absolutely expiration time
+     * Is more performant to work only with an absolutely expiration time
        avoiding sliding Time, because no updates will be performed
-       wverytime that a value is fetched.
+       everytime that a value is fetched.
      * We can use the TTL index to remove all elements in server side.    
         
     */
