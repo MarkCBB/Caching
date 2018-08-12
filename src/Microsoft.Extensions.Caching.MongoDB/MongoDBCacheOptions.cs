@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 namespace Microsoft.Extensions.Caching.MongoDB
 {
@@ -18,10 +19,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
             MaxRetries = 240;
             MillisToWait = 500;
             DeleteOldValues = false;
+            MongoClientSettings = null;
         }
 
         /// <summary>
-        /// Connection string to the database
+        /// Connection string to the database. Not used if MongoClientSettings are provided.
         /// </summary>
         public string ConnectionString { get; set; }
 
@@ -58,6 +60,15 @@ namespace Microsoft.Extensions.Caching.MongoDB
         /// and use the built-in TTL index. Learn more: https://github.com/MarkCBB/Caching/wiki#usage
         /// </summary>
         public bool DeleteOldValues { get; set; }
+
+
+        /// <summary>
+        /// MongoClientSettings to establish a connection.
+        /// If a value is provided in this property the ConnectionString is not used
+        /// and all information regarding servers must be provided in this object.
+        /// </summary>
+        public MongoClientSettings MongoClientSettings { get; set; }
+
 
         MongoDBCacheOptions IOptions<MongoDBCacheOptions>.Value
         {

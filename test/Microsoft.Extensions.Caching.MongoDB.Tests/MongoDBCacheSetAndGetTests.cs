@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
     public class MongoDBCacheSetAndGetTests : BaseMongoDbTests
     {
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_AbsoluteExpiration_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration()
+        public virtual void MongoDBCache_AbsoluteExpiration_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_AbsoluteExpiration_Is_After_Sliding_So_Effective_Should_Be_Sliding()
+        public virtual void MongoDBCache_AbsoluteExpiration_Is_After_Sliding_So_Effective_Should_Be_Sliding()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -69,7 +69,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_AbsoluteExpirationRelativeToNow_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration()
+        public virtual void MongoDBCache_AbsoluteExpirationRelativeToNow_Is_Before_Sliding_So_Effective_Should_Be_AbsoluteExpiration()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -94,7 +94,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_AbsoluteExpirationRelativeToNow_Is_After_Sliding_So_Effective_Should_Be_Sliding()
+        public virtual void MongoDBCache_AbsoluteExpirationRelativeToNow_Is_After_Sliding_So_Effective_Should_Be_Sliding()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -127,7 +127,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         // en caso de que se intente obtener un valor con una clave inexistente
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_Getting_a_non_existing_key_should_be_null()
+        public virtual void MongoDBCache_Getting_a_non_existing_key_should_be_null()
         {
             // Arrange
             var key = "MongoDBCache_Getting_a_non_existing_key_should_be_null" + GetRandomNumber();
@@ -140,7 +140,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_Refreshing_a_non_existing_key_should_be_null()
+        public virtual void MongoDBCache_Refreshing_a_non_existing_key_should_be_null()
         {
             // Arrange
             var key = "MongoDBCache_Refreshing_a_non_existing_key_should_be_null" + GetRandomNumber();
@@ -154,7 +154,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_Set_the_same_key_twice_should_get_the_last_value()
+        public virtual void MongoDBCache_Set_the_same_key_twice_should_get_the_last_value()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -179,7 +179,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_old_documents_are_deleted_if_Delete_old_values_is_true()
+        public virtual void MongoDBCache_old_documents_are_deleted_if_Delete_old_values_is_true()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;
@@ -219,7 +219,7 @@ namespace Microsoft.Extensions.Caching.MongoDB
         }
 
         [Fact(Skip = SkipReason)]
-        public void MongoDBCache_documents_not_old_are_not_deleted_if_Delete_old_values_is_true()
+        public virtual void MongoDBCache_documents_not_old_are_not_deleted_if_Delete_old_values_is_true()
         {
             // Arrange
             var utcNow = DateTimeOffset.UtcNow;

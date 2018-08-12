@@ -23,9 +23,11 @@ namespace Microsoft.Extensions.Caching.MongoDB
 
             Options = optionsAccessor.Value;
 
-            if (string.IsNullOrEmpty(Options.ConnectionString))
+            if (string.IsNullOrEmpty(Options.ConnectionString) && Options.MongoClientSettings == null)
             {
-                throw new ArgumentException(nameof(Options.ConnectionString)
+                throw new ArgumentException(
+                    nameof(Options.ConnectionString)
+                    + " or " + nameof(Options.MongoClientSettings)
                     + " must contain a valid value");
             }
         }

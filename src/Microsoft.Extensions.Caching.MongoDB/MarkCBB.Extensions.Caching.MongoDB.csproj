@@ -16,7 +16,7 @@ This implementation is based on the official made by Microsoft for SqlServer and
     <RepositoryUrl>https://github.com/MarkCBB/Caching</RepositoryUrl>
     <PackageIconUrl>https://www.nuget.org/Content/gallery/img/default-package-icon.svg</PackageIconUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>An unexpected exception was thrown trying to refresh a non existing item. This release fixes this issue.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added MongoClientSettings as an option to set the connection enabling all possible settings.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

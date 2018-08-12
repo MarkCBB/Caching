@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
+using MongoDB.Driver;
 using System.Text;
 
 namespace Microsoft.Extensions.Caching.MongoDB
@@ -71,6 +72,22 @@ namespace Microsoft.Extensions.Caching.MongoDB
         protected static long ToUnixTimeMilliseconds(DateTime d)
         {
             return ((DateTimeOffset)d).ToUnixTimeMilliseconds();
+        }
+
+        protected static MongoDBCache GetMongoDbConnectionWithSettings()
+        {
+            var options = new MongoDBCacheOptions()
+            {
+                DatabaseName = DefaultDatabaseName,
+                CollectionName = DefaultCollectionName,
+                MongoClientSettings = new MongoClientSettings()
+                {
+                    Servers = new MongoUrl(ConnectionString).Servers,
+                    WriteConcern = WriteConcern.W1
+                }
+            };
+
+            return new MongoDBCache(options);
         }
     }
 }

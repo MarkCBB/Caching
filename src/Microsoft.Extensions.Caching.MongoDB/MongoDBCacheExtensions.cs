@@ -50,9 +50,19 @@ namespace Microsoft.Extensions.Caching.MongoDB
             };
         }
 
+        private static MongoClient GetMongoClient(this MongoDBCache obj)
+        {
+            if (obj.Options.MongoClientSettings != null)
+            {
+                return new MongoClient(obj.Options.MongoClientSettings);
+            }
+
+            return new MongoClient(obj.Options.ConnectionString);
+        }
+
         public static IMongoCollection<CacheItemModel> GetCollection(this MongoDBCache obj)
         {
-            return new MongoClient(obj.Options.ConnectionString)
+            return GetMongoClient(obj)
                 .GetDatabase(obj.Options.DatabaseName)
                 .GetCollection<CacheItemModel>(obj.Options.CollectionName);
         }
