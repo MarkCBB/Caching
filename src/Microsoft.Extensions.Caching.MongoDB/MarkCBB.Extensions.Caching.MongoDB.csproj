@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <Description>Distributed cache implementation of Microsoft.Extensions.Caching.Distributed.IDistributedCache using MongoDB.
-This implementation is based on the official made by Microsoft for SqlServer and Redis.</Description>
+This implementation is based on the official made by Microsoft for SqlServer and Redis.
+
+In order to fix an issue in the MongoDB driver using .net core 3.0, this release (2.1.2) upgrades the minimum version of MongoDB driver to 2.8.1.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
